@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>영양사 목록 — NutriMatch</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
+    <div class="nav-links">
+      <a href="/">홈</a>
+      <a href="/nutritionists" class="active">영양사 목록</a>
+      <a href="/nutritionists/register">영양사 등록</a>
+      <a href="/companies/request">서비스 신청</a>
+      <a href="/bookings">예약 현황</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1>👩‍⚕️ 등록 영양사 목록</h1>
+    <p>현재 {{ nutritionists|length }}명의 전문 영양사가 등록되어 있습니다</p>
+  </div>
+</div>
+
+{% if request.query_params.get('registered') %}
+<div class="success-banner">
+  ✅ 영양사 등록이 완료되었습니다! 기업 매칭에 참여할 수 있습니다.
+</div>
+{% endif %}
+
+{% if nutritionists %}
+<div class="nut-grid">
+  {% for n in nutritionists %}
+  <div class="nut-card">
+    <div class="nut-card-name">{{ n.name }}</div>
+    <div class="nut-card-meta">
+      <span class="badge badge-green">{{ n.specialty_label }}</span>
+      <span class="badge badge-blue">{{ n.region_label }}</span>
+    </div>
+    <div class="nut-card-rate">{{ n.hourly_rate | krw }} / 시간</div>
+    <div style="margin-bottom: 10px;">
+      <div class="day-chips">
+        {% set days = ['mon','tue','wed','thu','fri','sat','sun'] %}
+        {% set day_labels = {'mon':'월','tue':'화','wed':'수','thu':'목','fri':'금','sat':'토','sun':'일'} %}
+        {% for day in days %}
+        <div class="day-chip {% if day in n.available_days_list %}active{% else %}inactive{% endif %}" style="width:26px;height:26px;font-size:11px;">
+          {{ day_labels[day] }}
+        </div>
+        {% endfor %}
+      </div>
+      <div style="font-size: 13px; color: var(--text-sub); margin-top: 6px;">
+        {{ n.available_time_start.strftime('%H:%M') }} ~ {{ n.available_time_end.strftime('%H:%M') }}
+      </div>
+    </div>
+    {% if n.bio %}
+    <p class="nut-card-bio">{{ n.bio[:80] }}{% if n.bio|length > 80 %}...{% endif %}</p>
+    {% endif %}
+    <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);">
+      <div style="font-size: 12px; color: var(--text-light);">{{ n.email }}</div>
+      <div style="font-size: 12px; color: var(--text-light);">{{ n.phone }}</div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" style="max-width: 500px; margin: 60px auto;">
+  <div class="empty-icon">👩‍⚕️</div>
+  <h3>아직 등록된 영양사가 없습니다</h3>
+  <p>샘플 데이터를 로드하거나 직접 등록해보세요.</p>
+  <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+    <a href="/seed" class="btn btn-green">샘플 데이터 로드</a>
+    <a href="/nutritionists/register" class="btn btn-outline">영양사 등록</a>
+  </div>
+</div>
+{% endif %}
+
+</body>
+</html>

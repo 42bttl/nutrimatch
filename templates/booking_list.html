@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>예약 현황 — NutriMatch</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
+    <div class="nav-links">
+      <a href="/">홈</a>
+      <a href="/nutritionists">영양사 목록</a>
+      <a href="/nutritionists/register">영양사 등록</a>
+      <a href="/companies/request">서비스 신청</a>
+      <a href="/bookings" class="active">예약 현황</a>
+    </div>
+  </div>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1>📅 예약 현황</h1>
+    <p>전체 예약 신청 목록과 상태를 관리합니다</p>
+  </div>
+</div>
+
+<div class="booking-container">
+
+  {% if request.query_params.get('msg') %}
+  <div class="alert alert-success">✅ {{ request.query_params.get('msg') }}</div>
+  {% endif %}
+
+  <!-- 상태 탭 필터 -->
+  <div class="status-tabs">
+    <button class="tab-btn active" onclick="filterTable('all')">전체 ({{ bookings|length }})</button>
+    <button class="tab-btn" onclick="filterTable('pending')">
+      신청 대기 ({{ bookings|selectattr('status','equalto','pending')|list|length }})
+    </button>
+    <button class="tab-btn" onclick="filterTable('confirmed')">
+      예약 확정 ({{ bookings|selectattr('status','equalto','confirmed')|list|length }})
+    </button>
+    <button class="tab-btn" onclick="filterTable('completed')">
+      완료 ({{ bookings|selectattr('status','equalto','completed')|list|length }})
+    </button>
+    <button class="tab-btn" onclick="filterTable('cancelled')">
+      취소 ({{ bookings|selectattr('status','equalto','cancelled')|list|length }})
+    </button>
+  </div>
+
+  {% if bookings %}
+  <div class="booking-table-wrap">
+    <table class="booking-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>기업명</th>
+          <th>영양사</th>
+          <th>전문분야</th>
+          <th>서비스 유형</th>
+          <th>신청일</th>
+          <th>상태</th>
+          <th>액션</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for b in bookings %}
+        <tr data-status="{{ b.status }}">
+          <td style="color: var(--text-light);">{{ b.id }}</td>
+          <td style="font-weight: 600;">{{ b.request.company_name }}</td>
+          <td>{{ b.nutritionist.name }}</td>
+          <td><span class="badge badge-green">{{ b.nutritionist.specialty_label }}</span></td>
+          <td><span class="badge badge-blue">{{ b.request.service_type_label }}</span></td>
+          <td style="color: var(--text-sub); font-size: 13px;">
+            {{ b.created_at.strftime('%Y.%m.%d') }}
+          </td>
+          <td>
+            <span class="badge status-{{ b.status }}">{{ b.status_label }}</span>
+          </td>
+          <td>
+            <div class="booking-actions">
+              {% if b.status == 'pending' %}
+                <form method="POST" action="/bookings/{{ b.id }}/confirm" style="margin:0;">
+                  <button type="submit" class="btn btn-green btn-sm">확정</button>
+                </form>
+                <form method="POST" action="/bookings/{{ b.id }}/cancel" style="margin:0;">
+                  <button type="submit" class="btn btn-sm"
+                          style="background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A;"
+                          onclick="return confirm('예약을 취소하시겠습니까?')">취소</button>
+                </form>
+              {% elif b.status == 'confirmed' %}
+                <form method="POST" action="/bookings/{{ b.id }}/complete" style="margin:0;">
+                  <button type="submit" class="btn btn-outline btn-sm">완료</button>
+                </form>
+                <form method="POST" action="/bookings/{{ b.id }}/cancel" style="margin:0;">
+                  <button type="submit" class="btn btn-sm"
+                          style="background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A;"
+                          onclick="return confirm('예약을 취소하시겠습니까?')">취소</button>
+                </form>
+              {% else %}
+                <span style="color: var(--text-light); font-size: 13px;">—</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📭</div>
+    <h3>예약 내역이 없습니다</h3>
+    <p>서비스를 신청하고 영양사를 매칭받아 보세요.</p>
+    <a href="/companies/request" class="btn btn-green">서비스 신청하기</a>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+  function filterTable(status) {
+    const rows = document.querySelectorAll('tbody tr');
+    const tabs = document.querySelectorAll('.tab-btn');
+    tabs.forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+
+    rows.forEach(row => {
+      if (status === 'all' || row.dataset.status === status) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

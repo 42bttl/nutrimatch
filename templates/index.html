@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriMatch — 기업 맞춤 영양사 매칭 플랫폼</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
+    <div class="nav-links">
+      <a href="/" class="active">홈</a>
+      <a href="/nutritionists">영양사 목록</a>
+      <a href="/nutritionists/register">영양사 등록</a>
+      <a href="/companies/request">서비스 신청</a>
+      <a href="/bookings">예약 현황</a>
+    </div>
+  </div>
+</nav>
+
+{% if seed_msg %}
+<div class="alert alert-success" style="max-width: 800px; margin: 16px auto;">✅ {{ seed_msg }}</div>
+{% endif %}
+
+<!-- 히어로 -->
+<section class="hero">
+  <h1>기업 맞춤 영양사<br>매칭 플랫폼</h1>
+  <p>전문 임상영양사와 기업을 스마트하게 연결합니다<br>직원 건강 증진, 지금 시작하세요</p>
+  <div class="hero-cta">
+    <a href="/companies/request" class="btn btn-primary">🏢 서비스 신청하기</a>
+    <a href="/nutritionists/register" class="btn btn-secondary">👩‍⚕️ 영양사로 등록하기</a>
+  </div>
+</section>
+
+<!-- 통계 바 -->
+<div class="stats-bar">
+  <div class="stats-inner">
+    <div class="stat-item">
+      <div class="stat-number">{{ nutritionist_count }}</div>
+      <div class="stat-label">등록 영양사</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ match_count }}</div>
+      <div class="stat-label">누적 매칭</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number">{{ company_count }}</div>
+      <div class="stat-label">기업 파트너</div>
+    </div>
+  </div>
+</div>
+
+<!-- 주요 기능 -->
+<section class="features">
+  <h2>플랫폼 주요 기능</h2>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">👩‍⚕️</div>
+      <h3>영양사 등록</h3>
+      <p>자격증 인증을 거친 전문 영양사가 전문분야, 가능지역, 일정을 등록하고 기업과 연결됩니다.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <h3>스마트 매칭</h3>
+      <p>지역 일치, 전문분야, 일정 가용성, 예산 적합성을 종합 분석해 최적의 영양사를 추천합니다.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📅</div>
+      <h3>예약 관리</h3>
+      <p>매칭 후 예약 신청부터 확정, 완료까지 전 과정을 플랫폼에서 한 번에 관리합니다.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 하단 CTA -->
+<section style="background: #E8F5E9; padding: 64px 24px; text-align: center;">
+  <h2 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 12px;">지금 바로 시작하세요</h2>
+  <p style="color: var(--text-sub); margin-bottom: 28px;">샘플 영양사 데이터를 먼저 확인하고 싶으신가요?</p>
+  <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+    <a href="/seed" class="btn btn-green">📥 샘플 데이터 로드</a>
+    <a href="/nutritionists" class="btn btn-outline">영양사 목록 보기</a>
+  </div>
+</section>
+
+</body>
+</html>
