@@ -1,0 +1,50 @@
+<!-- 케어브릿지헬스 로고 아이콘 (벡터, 인쇄소 제출용)
+     Colors: Navy #0B2B4A  Teal #0A8A7A  TealLt #0DB89E
+     Viewbox: 200x200 (정사각형 심볼)
+     Usage: logo.svg → 인쇄소 전달 / 스탬프 / 파비콘 등
+-->
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 200 200"
+     width="200" height="200"
+     role="img"
+     aria-label="케어브릿지헬스 로고">
+  <title>케어브릿지헬스 로고</title>
+
+  <!-- 배경 (투명, 필요 시 활성화)
+  <rect width="200" height="200" fill="white"/>
+  -->
+
+  <!-- ── 타워 (왼) ── -->
+  <rect x="44" y="78" width="16" height="84" rx="4" fill="#0B2B4A"/>
+  <!-- 타워 상단 캡 (왼) -->
+  <rect x="40" y="64" width="24" height="18" rx="4" fill="#0B2B4A"/>
+
+  <!-- ── 타워 (오) ── -->
+  <rect x="140" y="78" width="16" height="84" rx="4" fill="#0B2B4A"/>
+  <!-- 타워 상단 캡 (오) -->
+  <rect x="136" y="64" width="24" height="18" rx="4" fill="#0B2B4A"/>
+
+  <!-- ── 케이블 스테이 (왼 타워) ── -->
+  <line x1="52"  y1="70"  x2="14"  y2="148" stroke="#0A8A7A" stroke-width="5" stroke-linecap="round"/>
+  <line x1="52"  y1="78"  x2="82"  y2="148" stroke="#0A8A7A" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- ── 케이블 스테이 (오 타워) ── -->
+  <line x1="148" y1="70"  x2="186" y2="148" stroke="#0A8A7A" stroke-width="5" stroke-linecap="round"/>
+  <line x1="148" y1="78"  x2="118" y2="148" stroke="#0A8A7A" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- ── 교량 상판 ── -->
+  <rect x="10" y="148" width="180" height="13" rx="6" fill="#0B2B4A" opacity="0.88"/>
+
+  <!-- ── 하트 (건강 심볼, 중앙 상단) ── -->
+  <path d="
+    M100 55
+    C100 44, 86 36, 86 48
+    C86 36, 72 44, 72 55
+    C72 66, 86 78, 100 88
+    C114 78, 128 66, 128 55
+    C128 44, 114 36, 114 48
+    C114 36, 100 44, 100 55
+    Z"
+    fill="#0DB89E"/>
+
+</svg>
