@@ -9,8 +9,8 @@ from fpdf.enums import XPos, YPos
 
 # ── 경로 ──────────────────────────────────────────────
 BASE   = os.path.dirname(os.path.abspath(__file__))
-F_REG  = os.path.join(BASE, 'NotoSansKR-Regular.ttf')
-F_BOLD = os.path.join(BASE, 'NotoSansKR-Bold.ttf')
+F_REG  = os.path.join(BASE, 'NotoKR-Regular-glyf.ttf')
+F_BOLD = os.path.join(BASE, 'NotoKR-Bold-glyf.ttf')
 
 # ── 색상 (R, G, B 0-255) ──────────────────────────────
 NAVY    = (11,  43,  74)

@@ -5,3 +5,6 @@ __pycache__/
 *.sqlite3
 .env
 .DS_Store
+business_card/node_modules/
+business_card/package-lock.json
+business_card/package.json
