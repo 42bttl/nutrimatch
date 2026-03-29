@@ -1,215 +1,192 @@
 import json
 from datetime import datetime
 
-from sqlalchemy import (
-    Boolean, Column, Date, DateTime, Enum, ForeignKey,
-    Integer, String, Text, Time, UniqueConstraint
-)
-from sqlalchemy.orm import relationship
-
+from sqlalchemy import Column, DateTime, Enum as SAEnum, Float, Integer, String, Text
 from database import Base
 
-# --- Enum 상수 ---
+# ─── 레이블 매핑 ──────────────────────────────────────────────────────────────
 
-SPECIALTY_ENUM = Enum("clinical", "sports", "elderly", "pediatric", name="specialty_enum")
-
-REGION_ENUM = Enum(
-    "seoul", "gyeonggi", "incheon", "busan", "daegu",
-    "gwangju", "daejeon", "ulsan", "sejong", "gangwon",
-    "chungbuk", "chungnam", "jeonbuk", "jeonnam",
-    "gyeongbuk", "gyeongnam", "jeju",
-    name="region_enum"
-)
-
-SPECIALTY_ANY_ENUM = Enum(
-    "clinical", "sports", "elderly", "pediatric", "any",
-    name="specialty_any_enum"
-)
-
-# --- 한국어 레이블 매핑 ---
-
-SPECIALTY_LABELS = {
-    "clinical": "임상영양",
-    "sports": "스포츠영양",
-    "elderly": "노인영양",
-    "pediatric": "소아영양",
-    "any": "분야 무관",
+DIABETES_TYPE_LABELS = {
+    "type1": "1형 당뇨",
+    "type2": "2형 당뇨",
+    "prediabetes": "당뇨 전단계",
+    "gestational": "임신성 당뇨",
+    "none": "비당뇨",
 }
 
-REGION_LABELS = {
-    "seoul": "서울",
-    "gyeonggi": "경기",
-    "incheon": "인천",
-    "busan": "부산",
-    "daegu": "대구",
-    "gwangju": "광주",
-    "daejeon": "대전",
-    "ulsan": "울산",
-    "sejong": "세종",
-    "gangwon": "강원",
-    "chungbuk": "충북",
-    "chungnam": "충남",
-    "jeonbuk": "전북",
-    "jeonnam": "전남",
-    "gyeongbuk": "경북",
-    "gyeongnam": "경남",
-    "jeju": "제주",
+INTENSITY_LABELS = {
+    "light": "가벼운",
+    "moderate": "보통",
+    "intense": "격렬한",
 }
 
-COMPANY_SIZE_LABELS = {
-    "small": "소기업 (50인 미만)",
-    "medium": "중기업 (50~300인)",
-    "large": "대기업 (300인 이상)",
+TREND_LABELS = {
+    "NONE": "→",
+    "DoubleUp": "↑↑",
+    "SingleUp": "↑",
+    "FortyFiveUp": "↗",
+    "Flat": "→",
+    "FortyFiveDown": "↘",
+    "SingleDown": "↓",
+    "DoubleDown": "↓↓",
+    "NOT_COMPUTABLE": "-",
+    "RATE_OUT_OF_RANGE": "?",
 }
 
-SERVICE_TYPE_LABELS = {
-    "group_education": "집단 교육",
-    "individual_counseling": "개인 상담",
-    "both": "교육 + 상담",
+EXERCISE_TYPES = [
+    "걷기", "달리기", "자전거", "수영", "근력운동",
+    "요가", "등산", "HIIT", "필라테스", "골프", "테니스", "기타",
+]
+
+EXERCISE_MET = {
+    "걷기": 3.5, "달리기": 8.0, "자전거": 6.0, "수영": 7.0,
+    "근력운동": 5.0, "요가": 3.0, "등산": 6.0, "HIIT": 10.0,
+    "필라테스": 3.5, "골프": 4.0, "테니스": 7.0, "기타": 4.0,
 }
 
-BOOKING_STATUS_LABELS = {
-    "pending": "신청 대기",
-    "confirmed": "예약 확정",
-    "completed": "완료",
-    "cancelled": "취소",
-}
+COMMON_FOODS = [
+    {"name": "쌀밥 (1공기)", "calories": 300, "carbs": 65.0, "protein": 5.0, "fat": 1.0},
+    {"name": "현미밥 (1공기)", "calories": 280, "carbs": 60.0, "protein": 5.0, "fat": 2.0},
+    {"name": "잡곡밥 (1공기)", "calories": 290, "carbs": 61.0, "protein": 6.0, "fat": 2.0},
+    {"name": "김치찌개", "calories": 150, "carbs": 10.0, "protein": 12.0, "fat": 6.0},
+    {"name": "된장찌개", "calories": 130, "carbs": 8.0, "protein": 10.0, "fat": 5.0},
+    {"name": "비빔밥", "calories": 450, "carbs": 75.0, "protein": 15.0, "fat": 10.0},
+    {"name": "삼겹살 (200g)", "calories": 580, "carbs": 0.0, "protein": 30.0, "fat": 50.0},
+    {"name": "닭가슴살 (100g)", "calories": 165, "carbs": 0.0, "protein": 31.0, "fat": 4.0},
+    {"name": "계란 (2개)", "calories": 140, "carbs": 1.0, "protein": 12.0, "fat": 10.0},
+    {"name": "두부찌개", "calories": 120, "carbs": 5.0, "protein": 10.0, "fat": 6.0},
+    {"name": "고등어구이", "calories": 300, "carbs": 0.0, "protein": 25.0, "fat": 20.0},
+    {"name": "국수 (1인분)", "calories": 380, "carbs": 72.0, "protein": 12.0, "fat": 4.0},
+    {"name": "라면 (1봉)", "calories": 500, "carbs": 75.0, "protein": 10.0, "fat": 18.0},
+    {"name": "샌드위치", "calories": 350, "carbs": 40.0, "protein": 18.0, "fat": 12.0},
+    {"name": "바나나 (1개)", "calories": 90, "carbs": 23.0, "protein": 1.0, "fat": 0.0},
+    {"name": "사과 (1개)", "calories": 80, "carbs": 21.0, "protein": 0.0, "fat": 0.0},
+    {"name": "고구마 (1개)", "calories": 130, "carbs": 30.0, "protein": 2.0, "fat": 0.0},
+    {"name": "우유 (200ml)", "calories": 130, "carbs": 10.0, "protein": 7.0, "fat": 7.0},
+    {"name": "요거트 (150g)", "calories": 100, "carbs": 12.0, "protein": 5.0, "fat": 3.0},
+    {"name": "아메리카노", "calories": 10, "carbs": 2.0, "protein": 0.0, "fat": 0.0},
+    {"name": "라떼 (400ml)", "calories": 200, "carbs": 20.0, "protein": 7.0, "fat": 9.0},
+    {"name": "오렌지주스 (200ml)", "calories": 90, "carbs": 21.0, "protein": 1.0, "fat": 0.0},
+]
 
-DAY_LABELS = {
-    "mon": "월", "tue": "화", "wed": "수",
-    "thu": "목", "fri": "금", "sat": "토", "sun": "일",
-}
 
-ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+# ─── 모델 ─────────────────────────────────────────────────────────────────────
 
-
-# --- 모델 ---
-
-class Nutritionist(Base):
-    __tablename__ = "nutritionists"
+class UserProfile(Base):
+    __tablename__ = "user_profiles"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50), nullable=False)
-    license_number = Column(String(20), unique=True, nullable=False)
-    specialty = Column(SPECIALTY_ENUM, nullable=False)
-    region = Column(REGION_ENUM, nullable=False)
-    available_days = Column(String(100), nullable=False)  # JSON: ["mon","wed"]
-    available_time_start = Column(Time, nullable=False)
-    available_time_end = Column(Time, nullable=False)
-    hourly_rate = Column(Integer, nullable=False)
-    bio = Column(Text, nullable=True)
-    email = Column(String(100), unique=True, nullable=False)
-    phone = Column(String(20), nullable=False)
-    is_active = Column(Boolean, default=True, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    match_results = relationship("MatchResult", back_populates="nutritionist")
-    bookings = relationship("Booking", back_populates="nutritionist")
+    name = Column(String(100), nullable=False, default="사용자")
+    weight_kg = Column(Float, default=65.0)
+    diabetes_type = Column(
+        SAEnum("type1", "type2", "prediabetes", "gestational", "none", name="diabetes_type_enum"),
+        default="type2",
+    )
+    target_low = Column(Integer, default=70)
+    target_high = Column(Integer, default=180)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     @property
-    def available_days_list(self):
-        return json.loads(self.available_days)
-
-    @property
-    def specialty_label(self):
-        return SPECIALTY_LABELS.get(self.specialty, self.specialty)
-
-    @property
-    def region_label(self):
-        return REGION_LABELS.get(self.region, self.region)
+    def diabetes_label(self):
+        return DIABETES_TYPE_LABELS.get(self.diabetes_type, self.diabetes_type)
 
 
-class CompanyRequest(Base):
-    __tablename__ = "company_requests"
+class DexcomToken(Base):
+    __tablename__ = "dexcom_tokens"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    company_name = Column(String(100), nullable=False)
-    company_size = Column(
-        Enum("small", "medium", "large", name="company_size_enum"), nullable=False
-    )
-    service_type = Column(
-        Enum("group_education", "individual_counseling", "both", name="service_type_enum"),
-        nullable=False
-    )
-    preferred_region = Column(REGION_ENUM, nullable=False)
-    budget_per_hour = Column(Integer, nullable=False)
-    required_specialty = Column(SPECIALTY_ANY_ENUM, nullable=False)
-    contact_name = Column(String(50), nullable=False)
-    contact_email = Column(String(100), nullable=False)
-    contact_phone = Column(String(20), nullable=False)
-    preferred_days = Column(String(100), nullable=False)  # JSON
-    preferred_time_start = Column(Time, nullable=False)
-    preferred_time_end = Column(Time, nullable=False)
-    notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-
-    match_results = relationship("MatchResult", back_populates="request")
-    bookings = relationship("Booking", back_populates="request")
-
-    @property
-    def preferred_days_list(self):
-        return json.loads(self.preferred_days)
-
-    @property
-    def region_label(self):
-        return REGION_LABELS.get(self.preferred_region, self.preferred_region)
-
-    @property
-    def specialty_label(self):
-        return SPECIALTY_LABELS.get(self.required_specialty, self.required_specialty)
-
-    @property
-    def service_type_label(self):
-        return SERVICE_TYPE_LABELS.get(self.service_type, self.service_type)
-
-    @property
-    def company_size_label(self):
-        return COMPANY_SIZE_LABELS.get(self.company_size, self.company_size)
+    access_token = Column(Text, nullable=False)
+    refresh_token = Column(Text, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow)
 
 
-class MatchResult(Base):
-    __tablename__ = "match_results"
+class GlucoseReading(Base):
+    __tablename__ = "glucose_readings"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    request_id = Column(Integer, ForeignKey("company_requests.id"), nullable=False)
-    nutritionist_id = Column(Integer, ForeignKey("nutritionists.id"), nullable=False)
-    total_score = Column(Integer, nullable=False)
-    region_score = Column(Integer, nullable=False)
-    specialty_score = Column(Integer, nullable=False)
-    availability_score = Column(Integer, nullable=False)
-    budget_score = Column(Integer, nullable=False)
-    rank = Column(Integer, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    timestamp = Column(DateTime, nullable=False, index=True)
+    glucose_value = Column(Integer, nullable=False)
+    trend = Column(String(30), nullable=True)
+    source = Column(String(20), default="dexcom")
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    request = relationship("CompanyRequest", back_populates="match_results")
-    nutritionist = relationship("Nutritionist", back_populates="match_results")
-    booking = relationship("Booking", back_populates="match_result", uselist=False)
+    @property
+    def trend_arrow(self):
+        return TREND_LABELS.get(self.trend or "Flat", "→")
 
-
-class Booking(Base):
-    __tablename__ = "bookings"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    match_result_id = Column(
-        Integer, ForeignKey("match_results.id"), unique=True, nullable=False
-    )
-    request_id = Column(Integer, ForeignKey("company_requests.id"), nullable=False)
-    nutritionist_id = Column(Integer, ForeignKey("nutritionists.id"), nullable=False)
-    status = Column(
-        Enum("pending", "confirmed", "completed", "cancelled", name="booking_status_enum"),
-        default="pending", nullable=False
-    )
-    session_date = Column(Date, nullable=True)
-    session_time_start = Column(Time, nullable=True)
-    session_time_end = Column(Time, nullable=True)
-    admin_notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    match_result = relationship("MatchResult", back_populates="booking")
-    request = relationship("CompanyRequest", back_populates="bookings")
-    nutritionist = relationship("Nutritionist", back_populates="bookings")
+    @property
+    def status(self):
+        if self.glucose_value < 70:
+            return "low"
+        elif self.glucose_value > 180:
+            return "high"
+        return "normal"
 
     @property
     def status_label(self):
-        return BOOKING_STATUS_LABELS.get(self.status, self.status)
+        return {"low": "저혈당", "high": "고혈당", "normal": "정상"}[self.status]
+
+
+class MealLog(Base):
+    __tablename__ = "meal_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    logged_at = Column(DateTime, nullable=False, index=True)
+    meal_name = Column(String(200), nullable=False)
+    calories = Column(Integer, nullable=True)
+    carbs = Column(Float, nullable=True)
+    protein = Column(Float, nullable=True)
+    fat = Column(Float, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class ExerciseLog(Base):
+    __tablename__ = "exercise_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    logged_at = Column(DateTime, nullable=False, index=True)
+    exercise_type = Column(String(100), nullable=False)
+    duration_min = Column(Integer, nullable=False)
+    intensity = Column(
+        SAEnum("light", "moderate", "intense", name="intensity_enum"),
+        default="moderate",
+    )
+    calories_burned = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    @property
+    def intensity_label(self):
+        return INTENSITY_LABELS.get(self.intensity, self.intensity)
+
+
+class Recipe(Base):
+    __tablename__ = "recipes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    ingredients = Column(Text, nullable=False)  # JSON array of strings
+    instructions = Column(Text, nullable=True)
+    calories = Column(Integer, nullable=True)
+    carbs = Column(Float, nullable=True)
+    protein = Column(Float, nullable=True)
+    fat = Column(Float, nullable=True)
+    servings = Column(Integer, default=1)
+    tags = Column(String(200), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    @property
+    def ingredients_list(self):
+        try:
+            return json.loads(self.ingredients)
+        except Exception:
+            return [self.ingredients]
+
+    @property
+    def tags_list(self):
+        if not self.tags:
+            return []
+        return [t.strip() for t in self.tags.split(",") if t.strip()]

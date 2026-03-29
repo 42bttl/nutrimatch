@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}운동 추가 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">운동 추가</div>
+    <div class="page-subtitle">새로운 운동 기록</div>
+  </div>
+  <a href="/exercise" class="btn btn-outline">← 목록으로</a>
+</div>
+
+<div style="max-width:520px;">
+  {% if error %}<div class="form-error">⚠️ {{ error }}</div>{% endif %}
+
+  <div class="card">
+    <form method="post" action="/exercise/add">
+      <div class="form-group">
+        <label class="form-label">운동 종류 *</label>
+        <select name="exercise_type" class="form-select" required>
+          {% for etype in exercise_types %}
+          <option value="{{ etype }}" {% if form.exercise_type == etype %}selected{% endif %}>{{ etype }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">기록 시간 *</label>
+        <input type="datetime-local" name="logged_at" class="form-input" required
+               value="{{ default_time }}">
+      </div>
+
+      <div class="form-row" style="margin-bottom:16px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">운동 시간 (분) *</label>
+          <input type="number" name="duration_min" class="form-input" required
+                 min="1" max="480" placeholder="30">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">운동 강도 *</label>
+          <select name="intensity" class="form-select" required>
+            {% for key, label in intensity_labels.items() %}
+            <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">메모</label>
+        <textarea name="notes" class="form-textarea"
+                  placeholder="컨디션, 혈당 변화 메모, 특이사항 등..."></textarea>
+      </div>
+
+      <div class="alert alert-info" style="margin-bottom:16px; font-size:12px;">
+        💡 소모 칼로리는 운동 종류, 시간, 체중(설정에서 입력)을 기반으로 자동 계산됩니다
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;">기록 저장</button>
+        <a href="/exercise" class="btn btn-outline">취소</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

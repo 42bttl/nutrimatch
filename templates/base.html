@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}GlucoLife{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+</head>
+<body>
+<div class="layout">
+
+  <!-- 사이드바 -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>🩺 GlucoLife</h1>
+      <span>CGM 생활습관 관리</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="/" class="nav-item {% if request.url.path == '/' %}active{% endif %}">
+        <span class="nav-icon">🏠</span><span>대시보드</span>
+      </a>
+      <a href="/glucose" class="nav-item {% if request.url.path.startswith('/glucose') or request.url.path.startswith('/auth/dexcom') %}active{% endif %}">
+        <span class="nav-icon">📈</span><span>혈당</span>
+      </a>
+      <a href="/meals" class="nav-item {% if request.url.path.startswith('/meals') %}active{% endif %}">
+        <span class="nav-icon">🍽️</span><span>식사</span>
+      </a>
+      <a href="/exercise" class="nav-item {% if request.url.path.startswith('/exercise') %}active{% endif %}">
+        <span class="nav-icon">🏃</span><span>운동</span>
+      </a>
+      <a href="/insights" class="nav-item {% if request.url.path.startswith('/insights') %}active{% endif %}">
+        <span class="nav-icon">💡</span><span>인사이트</span>
+      </a>
+      <a href="/recipes" class="nav-item {% if request.url.path.startswith('/recipes') %}active{% endif %}">
+        <span class="nav-icon">📖</span><span>레시피</span>
+      </a>
+      <a href="/settings" class="nav-item {% if request.url.path.startswith('/settings') %}active{% endif %}">
+        <span class="nav-icon">⚙️</span><span>설정</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      {% if latest_glucose %}
+        <div class="glucose-badge">
+          <div>
+            <span class="val">{{ latest_glucose.glucose_value }}</span>
+            <span class="unit">mg/dL</span>
+            <span class="trend">{{ latest_glucose.trend_arrow }}</span>
+          </div>
+          <div class="time">{{ latest_glucose.timestamp | fmt_time }}</div>
+        </div>
+      {% else %}
+        <div class="no-glucose">혈당 데이터 없음</div>
+      {% endif %}
+      <div style="margin-top:8px; text-align:center;">
+        <span class="conn-dot {% if dexcom_connected %}on{% else %}off{% endif %}"></span>
+        <span style="font-size:10px; color:rgba(255,255,255,.5);">
+          {% if dexcom_connected %}Dexcom 연결됨{% else %}Dexcom 미연결{% endif %}
+        </span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- 메인 -->
+  <main class="main">
+    {% block content %}{% endblock %}
+  </main>
+
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

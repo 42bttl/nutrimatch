@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+{% block title %}대시보드 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">대시보드</div>
+    <div class="page-subtitle">오늘의 생활습관 요약</div>
+  </div>
+  <div style="display:flex; gap:8px;">
+    <a href="/meals/add" class="btn btn-outline btn-sm">🍽️ 식사 기록</a>
+    <a href="/exercise/add" class="btn btn-primary btn-sm">🏃 운동 기록</a>
+  </div>
+</div>
+
+<!-- 오늘 통계 -->
+<div class="stats-grid">
+  <div class="stat-card {% if daily_stats.avg %}{% if daily_stats.avg < profile.target_low %}red{% elif daily_stats.avg > profile.target_high %}amber{% else %}green{% endif %}{% endif %}">
+    <div class="stat-label">평균 혈당 (오늘)</div>
+    <div class="stat-value">
+      {{ daily_stats.avg or '—' }}<span class="stat-unit">{% if daily_stats.avg %}mg/dL{% endif %}</span>
+    </div>
+  </div>
+  <div class="stat-card {% if daily_stats.tir %}green{% endif %}">
+    <div class="stat-label">목표 범위 내 시간</div>
+    <div class="stat-value">
+      {{ daily_stats.tir or '—' }}<span class="stat-unit">{% if daily_stats.tir %}%{% endif %}</span>
+    </div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-label">섭취 칼로리</div>
+    <div class="stat-value">{{ total_calories_in }}<span class="stat-unit">kcal</span></div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">소모 칼로리</div>
+    <div class="stat-value">{{ total_calories_out }}<span class="stat-unit">kcal</span></div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-label">탄수화물 섭취</div>
+    <div class="stat-value">{{ total_carbs }}<span class="stat-unit">g</span></div>
+  </div>
+</div>
+
+<!-- Dexcom 미연결 안내 -->
+{% if not dexcom_connected %}
+<div class="alert alert-info" style="margin-bottom:20px;">
+  💡 Dexcom CGM을 연동하면 실시간 혈당 데이터를 자동으로 가져올 수 있습니다.
+  {% if dexcom_configured %}
+    <a href="/auth/dexcom" class="btn btn-primary btn-sm" style="margin-left:auto;">연동하기</a>
+  {% else %}
+    <a href="/settings" class="btn btn-outline btn-sm" style="margin-left:auto;">설정하기</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- 혈당 차트 -->
+<div class="card" style="margin-bottom:20px;">
+  <div class="card-title">24시간 혈당 추이</div>
+  <div class="chart-container" style="height:280px;">
+    <canvas id="glucoseChart"></canvas>
+  </div>
+  <div style="display:flex; gap:16px; margin-top:12px; font-size:11px; color:var(--text-sub);">
+    <span>🟢 목표 범위 내</span>
+    <span>🔴 저혈당 &lt;{{ profile.target_low }}</span>
+    <span>🟡 고혈당 &gt;{{ profile.target_high }}</span>
+    <span>🔺 식사</span>
+    <span>🔷 운동</span>
+  </div>
+</div>
+
+<!-- 오늘 식사 & 운동 -->
+<div class="grid-2">
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div class="card-title" style="margin-bottom:0;">오늘 식사</div>
+      <a href="/meals/add" class="btn btn-outline btn-sm">+ 추가</a>
+    </div>
+    {% if today_meals %}
+      {% for meal in today_meals %}
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f3f4f6;">
+        <div>
+          <div style="font-weight:600; font-size:13.5px;">{{ meal.meal_name }}</div>
+          <div style="font-size:11px; color:var(--text-sub);">{{ meal.logged_at | fmt_time }}</div>
+        </div>
+        <div style="text-align:right; font-size:12px; color:var(--text-sub);">
+          {% if meal.calories %}<span class="badge badge-blue">{{ meal.calories }} kcal</span>{% endif %}
+          {% if meal.carbs %}<span style="margin-left:4px;">탄 {{ meal.carbs }}g</span>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state" style="padding:24px;">
+        <div class="icon">🍽️</div>
+        <div>오늘 식사 기록이 없습니다</div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <div class="card-title" style="margin-bottom:0;">오늘 운동</div>
+      <a href="/exercise/add" class="btn btn-outline btn-sm">+ 추가</a>
+    </div>
+    {% if today_exercises %}
+      {% for ex in today_exercises %}
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px solid #f3f4f6;">
+        <div>
+          <div style="font-weight:600; font-size:13.5px;">{{ ex.exercise_type }}</div>
+          <div style="font-size:11px; color:var(--text-sub);">{{ ex.logged_at | fmt_time }} · {{ ex.intensity_label }}</div>
+        </div>
+        <div style="text-align:right; font-size:12px; color:var(--text-sub);">
+          <span class="badge badge-normal">{{ ex.duration_min }}분</span>
+          {% if ex.calories_burned %}<span style="margin-left:4px;">{{ ex.calories_burned }} kcal</span>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state" style="padding:24px;">
+        <div class="icon">🏃</div>
+        <div>오늘 운동 기록이 없습니다</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+fetch('/api/glucose?hours=24')
+  .then(r => r.json())
+  .then(data => {
+    const ctx = document.getElementById('glucoseChart').getContext('2d');
+    const tLow = data.target_low;
+    const tHigh = data.target_high;
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [
+          {
+            label: '혈당',
+            data: data.glucose,
+            borderColor: '#059669',
+            borderWidth: 2,
+            pointRadius: 2,
+            pointHoverRadius: 5,
+            fill: false,
+            tension: 0.3,
+            segment: {
+              borderColor: ctx => {
+                const v = ctx.p1.parsed.y;
+                if (v < tLow) return '#dc2626';
+                if (v > tHigh) return '#d97706';
+                return '#059669';
+              }
+            }
+          },
+          {
+            label: '식사',
+            data: data.meals,
+            type: 'scatter',
+            pointStyle: 'triangle',
+            pointRadius: 8,
+            backgroundColor: '#f59e0b',
+            borderColor: '#d97706',
+            borderWidth: 1,
+          },
+          {
+            label: '운동',
+            data: data.exercises,
+            type: 'scatter',
+            pointStyle: 'rectRot',
+            pointRadius: 8,
+            backgroundColor: '#3b82f6',
+            borderColor: '#2563eb',
+            borderWidth: 1,
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'hour', displayFormats: { hour: 'HH:mm' } },
+            grid: { color: '#f3f4f6' },
+            ticks: { font: { size: 11 } }
+          },
+          y: {
+            min: 40,
+            grid: { color: '#f3f4f6' },
+            ticks: { font: { size: 11 } }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: item => {
+                if (item.dataset.label === '식사') return '🍽️ ' + item.raw.label;
+                if (item.dataset.label === '운동') return '🏃 ' + item.raw.label + ' ' + item.raw.duration + '분';
+                return item.parsed.y + ' mg/dL';
+              }
+            }
+          },
+          annotation: {
+            annotations: {
+              targetBox: {
+                type: 'box',
+                yMin: tLow, yMax: tHigh,
+                backgroundColor: 'rgba(5,150,105,.07)',
+                borderColor: 'rgba(5,150,105,.2)',
+                borderWidth: 1,
+              }
+            }
+          }
+        }
+      }
+    });
+  })
+  .catch(() => {
+    document.getElementById('glucoseChart').parentElement.innerHTML =
+      '<div class="empty-state"><div class="icon">📈</div><div>혈당 데이터가 없습니다</div><p>Dexcom을 연동하거나 수동으로 혈당을 기록하세요</p></div>';
+  });
+</script>
+{% endblock %}

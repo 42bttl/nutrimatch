@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}레시피 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">레시피 관리</div>
+    <div class="page-subtitle">혈당 친화적 식단 레시피 저장</div>
+  </div>
+  <a href="/recipes/add" class="btn btn-primary">📖 레시피 추가</a>
+</div>
+
+{% if msg %}<div class="alert alert-success">✅ {{ msg }}</div>{% endif %}
+
+{% if recipes %}
+<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px;">
+  {% for recipe in recipes %}
+  <div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px;">
+      <div>
+        <div style="font-size:15px; font-weight:700;">{{ recipe.name }}</div>
+        {% if recipe.description %}
+        <div style="font-size:12px; color:var(--text-sub); margin-top:3px;">{{ recipe.description }}</div>
+        {% endif %}
+      </div>
+      <form method="post" action="/recipes/{{ recipe.id }}/delete"
+            onsubmit="return confirm('삭제할까요?')">
+        <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+      </form>
+    </div>
+
+    {% if recipe.tags_list %}
+    <div style="display:flex; gap:4px; flex-wrap:wrap; margin-bottom:10px;">
+      {% for tag in recipe.tags_list %}
+      <span class="badge badge-blue">{{ tag }}</span>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if recipe.calories or recipe.carbs %}
+    <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+      {% if recipe.calories %}<span class="badge badge-gray">{{ recipe.calories }} kcal</span>{% endif %}
+      {% if recipe.carbs %}<span class="badge badge-gray">탄 {{ recipe.carbs }}g</span>{% endif %}
+      {% if recipe.protein %}<span class="badge badge-gray">단 {{ recipe.protein }}g</span>{% endif %}
+      {% if recipe.fat %}<span class="badge badge-gray">지 {{ recipe.fat }}g</span>{% endif %}
+    </div>
+    {% endif %}
+
+    <details>
+      <summary style="font-size:12px; font-weight:600; cursor:pointer; color:var(--primary); margin-bottom:8px;">
+        재료 ({{ recipe.ingredients_list | length }}가지) 보기
+      </summary>
+      <ul style="font-size:12px; color:var(--text-sub); padding-left:16px; line-height:2;">
+        {% for ing in recipe.ingredients_list %}
+        <li>{{ ing }}</li>
+        {% endfor %}
+      </ul>
+    </details>
+
+    {% if recipe.instructions %}
+    <details style="margin-top:6px;">
+      <summary style="font-size:12px; font-weight:600; cursor:pointer; color:var(--primary);">
+        조리 방법 보기
+      </summary>
+      <div style="font-size:12px; color:var(--text-sub); margin-top:8px; line-height:1.8; white-space:pre-line;">{{ recipe.instructions }}</div>
+    </details>
+    {% endif %}
+
+    <div style="font-size:11px; color:var(--text-light); margin-top:10px;">
+      {{ recipe.servings }}인분 · {{ recipe.created_at | fmt_dt }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="icon">📖</div>
+    <div style="font-size:15px; font-weight:600; margin-bottom:6px;">레시피가 없습니다</div>
+    <p>혈당 친화적인 레시피를 저장해두면 식단 관리에 도움이 됩니다</p>
+    <a href="/recipes/add" class="btn btn-primary" style="margin-top:16px;">첫 번째 레시피 추가</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

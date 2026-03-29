@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}운동 기록 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">운동 기록</div>
+    <div class="page-subtitle">운동이 혈당에 미치는 영향 추적</div>
+  </div>
+  <a href="/exercise/add" class="btn btn-primary">🏃 운동 추가</a>
+</div>
+
+{% if msg %}<div class="alert alert-success">✅ {{ msg }}</div>{% endif %}
+
+{% if exercises %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>날짜/시간</th>
+          <th>운동 종류</th>
+          <th>시간</th>
+          <th>강도</th>
+          <th>소모 칼로리</th>
+          <th>메모</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for ex in exercises %}
+        <tr>
+          <td>
+            <div style="font-weight:600;">{{ ex.logged_at | fmt_dt }}</div>
+          </td>
+          <td style="font-weight:600;">{{ ex.exercise_type }}</td>
+          <td><span class="badge badge-normal">{{ ex.duration_min }}분</span></td>
+          <td>
+            {% if ex.intensity == 'light' %}<span class="badge badge-blue">{{ ex.intensity_label }}</span>
+            {% elif ex.intensity == 'intense' %}<span class="badge badge-low">{{ ex.intensity_label }}</span>
+            {% else %}<span class="badge badge-gray">{{ ex.intensity_label }}</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if ex.calories_burned %}
+              <span class="badge badge-high">{{ ex.calories_burned }} kcal</span>
+            {% else %}—{% endif %}
+          </td>
+          <td style="max-width:150px; color:var(--text-sub); font-size:12px;">{{ ex.notes or '—' }}</td>
+          <td>
+            <form method="post" action="/exercise/{{ ex.id }}/delete"
+                  onsubmit="return confirm('삭제할까요?')">
+              <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="icon">🏃</div>
+    <div style="font-size:15px; font-weight:600; margin-bottom:6px;">운동 기록이 없습니다</div>
+    <p>운동을 기록하면 혈당 변화 패턴을 파악할 수 있습니다</p>
+    <a href="/exercise/add" class="btn btn-primary" style="margin-top:16px;">첫 번째 운동 기록하기</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

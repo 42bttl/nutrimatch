@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}레시피 추가 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">레시피 추가</div>
+    <div class="page-subtitle">새로운 레시피 저장</div>
+  </div>
+  <a href="/recipes" class="btn btn-outline">← 목록으로</a>
+</div>
+
+<div style="max-width:640px;">
+  {% if error %}<div class="form-error">⚠️ {{ error }}</div>{% endif %}
+
+  <div class="card">
+    <form method="post" action="/recipes/add">
+      <div class="form-group">
+        <label class="form-label">레시피 이름 *</label>
+        <input type="text" name="name" class="form-input" required placeholder="예: 현미 채소 비빔밥">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">설명</label>
+        <input type="text" name="description" class="form-input"
+               placeholder="예: 저탄수화물 고단백 한 그릇 식사">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">재료 * <span style="font-size:11px; color:var(--text-sub);">(한 줄에 하나씩 입력)</span></label>
+        <textarea name="ingredients" class="form-textarea" required rows="6"
+                  placeholder="현미 1공기&#10;달걀 2개&#10;시금치 100g&#10;참기름 1큰술&#10;간장 2큰술"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">조리 방법</label>
+        <textarea name="instructions" class="form-textarea" rows="5"
+                  placeholder="1. 현미를 씻어 밥을 짓는다&#10;2. 시금치를 데친다..."></textarea>
+      </div>
+
+      <div style="font-size:12px; font-weight:600; color:var(--text-sub); margin-bottom:10px; text-transform:uppercase; letter-spacing:.5px;">영양 정보 (선택)</div>
+      <div class="form-row" style="margin-bottom:16px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">칼로리 (kcal)</label>
+          <input type="number" name="calories" class="form-input" min="0" placeholder="450">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">탄수화물 (g)</label>
+          <input type="number" step="0.1" name="carbs" class="form-input" min="0" placeholder="60">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">단백질 (g)</label>
+          <input type="number" step="0.1" name="protein" class="form-input" min="0" placeholder="20">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">지방 (g)</label>
+          <input type="number" step="0.1" name="fat" class="form-input" min="0" placeholder="8">
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-bottom:16px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">인분 수</label>
+          <input type="number" name="servings" class="form-input" min="1" value="1">
+        </div>
+        <div class="form-group" style="margin-bottom:0; grid-column:span 3;">
+          <label class="form-label">태그 <span style="font-size:11px; color:var(--text-sub);">(쉼표로 구분)</span></label>
+          <input type="text" name="tags" class="form-input"
+                 placeholder="저탄수, 고단백, 당뇨 친화적">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;">레시피 저장</button>
+        <a href="/recipes" class="btn btn-outline">취소</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

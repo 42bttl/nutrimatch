@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}식사 추가 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">식사 추가</div>
+    <div class="page-subtitle">새로운 식사 기록</div>
+  </div>
+  <a href="/meals" class="btn btn-outline">← 목록으로</a>
+</div>
+
+<div style="max-width:600px;">
+  {% if error %}<div class="form-error">⚠️ {{ error }}</div>{% endif %}
+
+  <!-- 빠른 선택 -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">자주 먹는 음식 빠른 선택</div>
+    <div class="food-quick-list">
+      {% for food in common_foods %}
+      <button type="button" class="food-chip" onclick="fillFood({{ loop.index0 }})">{{ food.name }}</button>
+      {% endfor %}
+    </div>
+    <div class="text-xs text-sub">클릭하면 아래 영양 정보가 자동으로 채워집니다</div>
+  </div>
+
+  <div class="card">
+    <form method="post" action="/meals/add">
+      <div class="form-group">
+        <label class="form-label">식사명 *</label>
+        <input type="text" name="meal_name" class="form-input" required
+               value="{{ form.meal_name or '' }}" placeholder="예: 현미밥 + 된장찌개">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">기록 시간 *</label>
+        <input type="datetime-local" name="logged_at" class="form-input" required
+               value="{{ default_time }}">
+      </div>
+
+      <div class="form-row" style="margin-bottom:16px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">칼로리 (kcal)</label>
+          <input type="number" name="calories" id="f_cal" class="form-input" min="0"
+                 value="{{ form.calories or '' }}" placeholder="300">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">탄수화물 (g)</label>
+          <input type="number" step="0.1" name="carbs" id="f_carb" class="form-input" min="0"
+                 value="{{ form.carbs or '' }}" placeholder="65">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">단백질 (g)</label>
+          <input type="number" step="0.1" name="protein" id="f_prot" class="form-input" min="0"
+                 value="{{ form.protein or '' }}" placeholder="5">
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">지방 (g)</label>
+          <input type="number" step="0.1" name="fat" id="f_fat" class="form-input" min="0"
+                 value="{{ form.fat or '' }}" placeholder="1">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">메모</label>
+        <textarea name="notes" class="form-textarea" placeholder="혈당 반응, 식후 컨디션 등 자유롭게 기록...">{{ form.notes or '' }}</textarea>
+      </div>
+
+      <div style="display:flex; gap:10px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;">기록 저장</button>
+        <a href="/meals" class="btn btn-outline">취소</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const foods = {{ common_foods | tojson }};
+
+function fillFood(idx) {
+  const f = foods[idx];
+  document.querySelector('[name="meal_name"]').value = f.name;
+  document.getElementById('f_cal').value  = f.calories || '';
+  document.getElementById('f_carb').value = f.carbs    || '';
+  document.getElementById('f_prot').value = f.protein  || '';
+  document.getElementById('f_fat').value  = f.fat      || '';
+}
+</script>
+{% endblock %}

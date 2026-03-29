@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}식사 기록 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">식사 기록</div>
+    <div class="page-subtitle">혈당에 미치는 식사 영향 추적</div>
+  </div>
+  <a href="/meals/add" class="btn btn-primary">🍽️ 식사 추가</a>
+</div>
+
+{% if msg %}<div class="alert alert-success">✅ {{ msg }}</div>{% endif %}
+
+{% if meals %}
+<div class="card">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>날짜/시간</th>
+          <th>식사명</th>
+          <th>칼로리</th>
+          <th>탄수화물</th>
+          <th>단백질</th>
+          <th>지방</th>
+          <th>메모</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for meal in meals %}
+        <tr>
+          <td>
+            <div style="font-weight:600;">{{ meal.logged_at | fmt_dt }}</div>
+          </td>
+          <td style="font-weight:600; max-width:200px;">{{ meal.meal_name }}</td>
+          <td>
+            {% if meal.calories %}
+              <span class="badge badge-blue">{{ meal.calories }} kcal</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>{% if meal.carbs %}{{ meal.carbs }}g{% else %}—{% endif %}</td>
+          <td>{% if meal.protein %}{{ meal.protein }}g{% else %}—{% endif %}</td>
+          <td>{% if meal.fat %}{{ meal.fat }}g{% else %}—{% endif %}</td>
+          <td style="max-width:150px; color:var(--text-sub); font-size:12px;">
+            {{ meal.notes or '—' }}
+          </td>
+          <td>
+            <form method="post" action="/meals/{{ meal.id }}/delete"
+                  onsubmit="return confirm('삭제할까요?')">
+              <button type="submit" class="btn btn-danger btn-sm">삭제</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <div class="icon">🍽️</div>
+    <div style="font-size:15px; font-weight:600; margin-bottom:6px;">식사 기록이 없습니다</div>
+    <p>식사를 기록하면 혈당과의 상관관계를 분석할 수 있습니다</p>
+    <a href="/meals/add" class="btn btn-primary" style="margin-top:16px;">첫 번째 식사 기록하기</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

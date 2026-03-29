@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}인사이트 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">인사이트</div>
+    <div class="page-subtitle">지난 7일 혈당 패턴 분석</div>
+  </div>
+</div>
+
+{% if weekly_stats.count == 0 %}
+<div class="card">
+  <div class="empty-state">
+    <div class="icon">💡</div>
+    <div style="font-size:15px; font-weight:600; margin-bottom:6px;">분석할 데이터가 없습니다</div>
+    <p>혈당 데이터가 쌓이면 패턴 분석이 표시됩니다</p>
+    <div style="display:flex; gap:8px; justify-content:center; margin-top:16px;">
+      {% if dexcom_configured %}
+        <a href="/auth/dexcom" class="btn btn-primary">Dexcom 연동</a>
+      {% endif %}
+      <a href="/glucose" class="btn btn-outline">수동 기록</a>
+    </div>
+  </div>
+</div>
+{% else %}
+
+<!-- 핵심 지표 -->
+<div class="stats-grid">
+  <div class="stat-card green">
+    <div class="stat-label">목표 범위 내 (TIR)</div>
+    <div class="stat-value">{{ weekly_stats.tir }}<span class="stat-unit">%</span></div>
+  </div>
+  <div class="stat-card {% if weekly_stats.avg < profile.target_low %}red{% elif weekly_stats.avg > profile.target_high %}amber{% else %}green{% endif %}">
+    <div class="stat-label">평균 혈당</div>
+    <div class="stat-value">{{ weekly_stats.avg }}<span class="stat-unit">mg/dL</span></div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-label">저혈당 시간</div>
+    <div class="stat-value">{{ weekly_stats.time_low }}<span class="stat-unit">%</span></div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-label">고혈당 시간</div>
+    <div class="stat-value">{{ weekly_stats.time_high }}<span class="stat-unit">%</span></div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-label">GMI (추정 A1c)</div>
+    <div class="stat-value">{{ weekly_stats.gmi }}<span class="stat-unit">%</span></div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-label">혈당 변동성 (CV)</div>
+    <div class="stat-value">{{ weekly_stats.cv }}<span class="stat-unit">%</span></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- TIR 도넛 -->
+  <div class="card">
+    <div class="card-title">목표 범위 내 시간 (TIR)</div>
+    <div style="display:flex; align-items:center; gap:24px;">
+      <div class="tir-ring">
+        <svg viewBox="0 0 120 120" width="140" height="140">
+          <!-- 고혈당 -->
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#fef3c7" stroke-width="16"/>
+          <!-- 저혈당 -->
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#fee2e2" stroke-width="16"
+                  stroke-dasharray="{{ weekly_stats.time_low * 3.14159 }}, 314.159"
+                  stroke-dashoffset="0"/>
+          <!-- 정상 -->
+          <circle cx="60" cy="60" r="50" fill="none" stroke="#d1fae5" stroke-width="16"
+                  stroke-dasharray="{{ (weekly_stats.tir or 0) * 3.14159 }}, 314.159"
+                  stroke-dashoffset="{{ -(weekly_stats.time_low or 0) * 3.14159 }}"/>
+        </svg>
+        <div class="tir-text">
+          <div class="tir-pct">{{ weekly_stats.tir }}%</div>
+          <div class="tir-label">목표 범위</div>
+        </div>
+      </div>
+      <div style="flex:1;">
+        <div style="margin-bottom:10px;">
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <div style="width:12px;height:12px;border-radius:2px;background:#d1fae5;border:1px solid #059669;"></div>
+            <span style="font-size:12px;">목표 범위 내</span>
+            <span style="margin-left:auto; font-weight:700;">{{ weekly_stats.tir }}%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+            <div style="width:12px;height:12px;border-radius:2px;background:#fef3c7;border:1px solid #d97706;"></div>
+            <span style="font-size:12px;">고혈당</span>
+            <span style="margin-left:auto; font-weight:700;">{{ weekly_stats.time_high }}%</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <div style="width:12px;height:12px;border-radius:2px;background:#fee2e2;border:1px solid #dc2626;"></div>
+            <span style="font-size:12px;">저혈당</span>
+            <span style="margin-left:auto; font-weight:700;">{{ weekly_stats.time_low }}%</span>
+          </div>
+        </div>
+        <div style="font-size:11px; color:var(--text-sub); margin-top:12px; line-height:1.8;">
+          <div>총 측정 횟수: <strong>{{ weekly_stats.count }}회</strong></div>
+          <div>최소: <strong>{{ weekly_stats.min }} mg/dL</strong></div>
+          <div>최대: <strong>{{ weekly_stats.max }} mg/dL</strong></div>
+          <div>표준편차: <strong>{{ weekly_stats.std_dev }} mg/dL</strong></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 시간대별 평균 혈당 -->
+  <div class="card">
+    <div class="card-title">시간대별 평균 혈당 (7일)</div>
+    <div class="chart-container" style="height:220px;">
+      <canvas id="hourlyChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- GMI 해석 -->
+<div class="card mt-24">
+  <div class="card-title">수치 해석 가이드</div>
+  <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:16px;">
+    <div style="background:#f9fafb; border-radius:8px; padding:14px;">
+      <div style="font-weight:700; margin-bottom:4px;">GMI {{ weekly_stats.gmi }}%</div>
+      <div style="font-size:12px; color:var(--text-sub); line-height:1.7;">
+        GMI(포도당 관리 지표)는 평균 혈당으로 추정한 HbA1c입니다.
+        {% if weekly_stats.gmi <= 5.7 %} ✅ 정상 범위입니다.
+        {% elif weekly_stats.gmi <= 6.4 %} ⚠️ 당뇨 전단계 범위입니다.
+        {% else %} 🔴 당뇨 진단 범위입니다. 의료진 상담을 권장합니다.
+        {% endif %}
+      </div>
+    </div>
+    <div style="background:#f9fafb; border-radius:8px; padding:14px;">
+      <div style="font-weight:700; margin-bottom:4px;">CV {{ weekly_stats.cv }}%</div>
+      <div style="font-size:12px; color:var(--text-sub); line-height:1.7;">
+        CV(변동계수)는 혈당 변동성을 나타냅니다.
+        {% if weekly_stats.cv <= 36 %} ✅ 안정적인 혈당 변동성입니다.
+        {% else %} ⚠️ 혈당 변동이 큰 편입니다. 식사·운동 패턴을 점검하세요.
+        {% endif %}
+      </div>
+    </div>
+    <div style="background:#f9fafb; border-radius:8px; padding:14px;">
+      <div style="font-weight:700; margin-bottom:4px;">TIR {{ weekly_stats.tir }}%</div>
+      <div style="font-size:12px; color:var(--text-sub); line-height:1.7;">
+        목표: TIR ≥ 70%.
+        {% if weekly_stats.tir >= 70 %} ✅ 목표를 달성했습니다!
+        {% elif weekly_stats.tir >= 50 %} ⚠️ 개선 여지가 있습니다.
+        {% else %} 🔴 목표 범위 내 시간이 부족합니다.
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+const hourlyData = {{ hourly_avg_json }};
+const labels = hourlyData.map(d => d.hour + '시');
+const values = hourlyData.map(d => d.avg);
+const tLow = {{ profile.target_low }};
+const tHigh = {{ profile.target_high }};
+
+const ctx = document.getElementById('hourlyChart');
+if (ctx) {
+  new Chart(ctx.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '평균 혈당',
+        data: values,
+        backgroundColor: values.map(v => {
+          if (v === null) return '#e5e7eb';
+          if (v < tLow) return '#fca5a5';
+          if (v > tHigh) return '#fcd34d';
+          return '#6ee7b7';
+        }),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { min: 60, grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } } }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: i => i.raw !== null ? i.raw + ' mg/dL' : '데이터 없음' } },
+        annotation: {
+          annotations: {
+            low:  { type: 'line', yMin: tLow,  yMax: tLow,  borderColor: '#dc2626', borderWidth: 1, borderDash: [4,4] },
+            high: { type: 'line', yMin: tHigh, yMax: tHigh, borderColor: '#d97706', borderWidth: 1, borderDash: [4,4] }
+          }
+        }
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

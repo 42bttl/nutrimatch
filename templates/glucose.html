@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}혈당 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">혈당 모니터링</div>
+    <div class="page-subtitle">CGM 데이터 및 수동 기록 관리</div>
+  </div>
+  <div style="display:flex; gap:8px;">
+    {% if dexcom_connected %}
+      <a href="/glucose" class="btn btn-outline btn-sm">🔄 동기화</a>
+    {% else if dexcom_configured %}
+      <a href="/auth/dexcom" class="btn btn-primary btn-sm">🔗 Dexcom 연동</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if msg %}<div class="alert alert-success">✅ {{ msg }}</div>{% endif %}
+{% if sync_error %}<div class="alert alert-warning">⚠️ Dexcom 동기화 오류: {{ sync_error }}</div>{% endif %}
+{% if not dexcom_connected %}
+<div class="alert alert-info">
+  💡 Dexcom CGM을 연동하면 혈당이 자동으로 동기화됩니다.
+  {% if dexcom_configured %}
+    <a href="/auth/dexcom" class="btn btn-primary btn-sm" style="margin-left:8px;">연동하기</a>
+  {% else %}
+    <a href="/settings" class="btn btn-outline btn-sm" style="margin-left:8px;">설정에서 API 키 입력</a>
+  {% endif %}
+</div>
+{% endif %}
+
+<!-- 주간 통계 -->
+<div class="stats-grid" style="margin-bottom:24px;">
+  <div class="stat-card {% if weekly_stats.avg %}{% if weekly_stats.avg < profile.target_low %}red{% elif weekly_stats.avg > profile.target_high %}amber{% else %}green{% endif %}{% endif %}">
+    <div class="stat-label">평균 혈당 (7일)</div>
+    <div class="stat-value">{{ weekly_stats.avg or '—' }}<span class="stat-unit">{% if weekly_stats.avg %}mg/dL{% endif %}</span></div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-label">목표 범위 내 (TIR)</div>
+    <div class="stat-value">{{ weekly_stats.tir or '—' }}<span class="stat-unit">{% if weekly_stats.tir %}%{% endif %}</span></div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-label">저혈당 시간</div>
+    <div class="stat-value">{{ weekly_stats.time_low or '—' }}<span class="stat-unit">{% if weekly_stats.time_low is not none %}%{% endif %}</span></div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-label">고혈당 시간</div>
+    <div class="stat-value">{{ weekly_stats.time_high or '—' }}<span class="stat-unit">{% if weekly_stats.time_high is not none %}%{% endif %}</span></div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-label">GMI (추정 A1c)</div>
+    <div class="stat-value">{{ weekly_stats.gmi or '—' }}<span class="stat-unit">{% if weekly_stats.gmi %}%{% endif %}</span></div>
+  </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:20px;">
+  <!-- 24시간 차트 -->
+  <div class="card" style="grid-column:span 2;">
+    <div class="card-title">24시간 혈당 추이</div>
+    <div class="chart-container" style="height:300px;">
+      <canvas id="glucoseChart24h"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- 수동 혈당 입력 -->
+  <div class="card">
+    <div class="card-title">수동 혈당 기록</div>
+    <form method="post" action="/glucose/manual">
+      <div class="form-group">
+        <label class="form-label">혈당 수치 (mg/dL)</label>
+        <input type="number" name="glucose_value" class="form-input" min="20" max="600" required placeholder="예: 120">
+      </div>
+      <div class="form-group">
+        <label class="form-label">측정 시간</label>
+        <input type="datetime-local" name="timestamp" class="form-input" id="manualTs" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">추세</label>
+        <select name="trend" class="form-select">
+          <option value="Flat">→ 유지</option>
+          <option value="FortyFiveUp">↗ 완만 상승</option>
+          <option value="SingleUp">↑ 상승</option>
+          <option value="DoubleUp">↑↑ 급상승</option>
+          <option value="FortyFiveDown">↘ 완만 하강</option>
+          <option value="SingleDown">↓ 하강</option>
+          <option value="DoubleDown">↓↓ 급하강</option>
+        </select>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">기록 저장</button>
+    </form>
+  </div>
+
+  <!-- 최근 기록 -->
+  <div class="card">
+    <div class="card-title">최근 혈당 기록 (최근 3시간)</div>
+    {% if recent_readings %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>시간</th><th>혈당</th><th>추세</th><th>상태</th><th>출처</th></tr></thead>
+          <tbody>
+            {% for r in recent_readings %}
+            <tr>
+              <td>{{ r.timestamp | fmt_time }}</td>
+              <td><strong>{{ r.glucose_value }}</strong> <span class="text-sub text-xs">mg/dL</span></td>
+              <td>{{ r.trend_arrow }}</td>
+              <td>
+                <span class="badge badge-{{ r.status }}">{{ r.status_label }}</span>
+              </td>
+              <td><span class="badge badge-gray">{{ r.source }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="icon">📊</div>
+        <div>최근 3시간 데이터 없음</div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 현재 시간 기본값
+document.getElementById('manualTs').value = new Date().toISOString().slice(0,16);
+
+fetch('/api/glucose?hours=24')
+  .then(r => r.json())
+  .then(data => {
+    const ctx = document.getElementById('glucoseChart24h').getContext('2d');
+    const tLow = data.target_low, tHigh = data.target_high;
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        datasets: [{
+          label: '혈당',
+          data: data.glucose,
+          borderColor: '#059669',
+          borderWidth: 2,
+          pointRadius: 2,
+          fill: false,
+          tension: 0.3,
+          segment: {
+            borderColor: ctx => {
+              const v = ctx.p1.parsed.y;
+              if (v < tLow) return '#dc2626';
+              if (v > tHigh) return '#d97706';
+              return '#059669';
+            }
+          }
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        scales: {
+          x: { type: 'time', time: { unit: 'hour', displayFormats: { hour: 'HH:mm' } }, grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } } },
+          y: { min: 40, grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 } } }
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: i => i.parsed.y + ' mg/dL' } },
+          annotation: {
+            annotations: {
+              box: { type: 'box', yMin: tLow, yMax: tHigh, backgroundColor: 'rgba(5,150,105,.07)', borderColor: 'rgba(5,150,105,.2)', borderWidth: 1 }
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %}

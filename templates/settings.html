@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}설정 — GlucoLife{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">설정</div>
+    <div class="page-subtitle">프로필 및 Dexcom 연동 관리</div>
+  </div>
+</div>
+
+{% if saved == '1' %}<div class="alert alert-success">✅ 설정이 저장되었습니다</div>{% endif %}
+{% if saved == 'disconnected' %}<div class="alert alert-warning">🔌 Dexcom 연동이 해제되었습니다</div>{% endif %}
+{% if error == 'dexcom_not_configured' %}<div class="alert alert-error">⚠️ Dexcom Client ID / Secret을 먼저 입력하세요 (.env 파일)</div>{% endif %}
+{% if error == 'dexcom_auth_failed' or error == 'token_exchange_failed' %}<div class="alert alert-error">❌ Dexcom 인증에 실패했습니다. 다시 시도해주세요</div>{% endif %}
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; max-width:900px;">
+
+  <!-- 프로필 설정 -->
+  <div class="card">
+    <div class="card-title">사용자 프로필</div>
+    <form method="post" action="/settings">
+      <div class="form-group">
+        <label class="form-label">이름</label>
+        <input type="text" name="name" class="form-input" required value="{{ profile.name }}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">체중 (kg)</label>
+        <input type="number" step="0.1" name="weight_kg" class="form-input"
+               min="20" max="300" required value="{{ profile.weight_kg }}">
+        <div class="form-hint">운동 칼로리 계산에 사용됩니다</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">당뇨 유형</label>
+        <select name="diabetes_type" class="form-select">
+          {% for key, label in diabetes_types.items() %}
+          <option value="{{ key }}" {% if profile.diabetes_type == key %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label class="form-label">목표 혈당 범위 (mg/dL)</label>
+        <div class="form-row">
+          <div>
+            <label class="form-label text-sm text-sub">최솟값 (저혈당 기준)</label>
+            <input type="number" name="target_low" class="form-input"
+                   min="50" max="100" required value="{{ profile.target_low }}">
+          </div>
+          <div>
+            <label class="form-label text-sm text-sub">최댓값 (고혈당 기준)</label>
+            <input type="number" name="target_high" class="form-input"
+                   min="120" max="300" required value="{{ profile.target_high }}">
+          </div>
+        </div>
+        <div class="form-hint">기본값: 70 ~ 180 mg/dL (일반 당뇨 목표 범위)</div>
+      </div>
+      <button type="submit" class="btn btn-primary w-full">설정 저장</button>
+    </form>
+  </div>
+
+  <!-- Dexcom 연동 -->
+  <div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-title">Dexcom CGM 연동</div>
+
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:16px; padding:12px; background:#f9fafb; border-radius:8px;">
+        <span class="conn-dot {% if dexcom_connected %}on{% else %}off{% endif %}"></span>
+        <span style="font-weight:600; font-size:13px;">
+          {% if dexcom_connected %}연결됨{% else %}미연결{% endif %}
+        </span>
+        {% if dexcom_configured %}
+          <span class="badge badge-blue" style="margin-left:auto;">API 키 설정됨</span>
+        {% else %}
+          <span class="badge badge-gray" style="margin-left:auto;">API 키 미설정</span>
+        {% endif %}
+      </div>
+
+      {% if dexcom_connected %}
+        <p style="font-size:13px; color:var(--text-sub); margin-bottom:16px; line-height:1.7;">
+          Dexcom 계정이 연결되어 있습니다. 혈당 페이지 방문 시 최근 24시간 데이터가 자동으로 동기화됩니다.
+        </p>
+        <form method="post" action="/auth/dexcom/disconnect">
+          <button type="submit" class="btn btn-danger w-full"
+                  onclick="return confirm('Dexcom 연동을 해제할까요?')">🔌 연동 해제</button>
+        </form>
+      {% else %}
+        <p style="font-size:13px; color:var(--text-sub); margin-bottom:16px; line-height:1.7;">
+          Dexcom G6/G7 CGM을 연동하면 혈당 데이터가 자동으로 가져와집니다.
+        </p>
+        {% if dexcom_configured %}
+          <a href="/auth/dexcom" class="btn btn-primary w-full">🔗 Dexcom 계정 연결</a>
+        {% else %}
+          <div class="alert alert-warning">
+            ⚙️ 연동하려면 .env 파일에 Dexcom API 키를 설정해야 합니다
+          </div>
+        {% endif %}
+      {% endif %}
+    </div>
+
+    <!-- .env 가이드 -->
+    <div class="card">
+      <div class="card-title">Dexcom API 설정 방법</div>
+      <div style="font-size:12px; color:var(--text-sub); line-height:2;">
+        <p style="margin-bottom:8px;">프로젝트 루트에 <code style="background:#f3f4f6; padding:1px 5px; border-radius:4px;">.env</code> 파일을 만들고 아래 내용을 입력하세요:</p>
+        <pre style="background:#1e1e2e; color:#cdd6f4; padding:12px; border-radius:8px; font-size:11px; line-height:1.8; overflow-x:auto;">DEXCOM_CLIENT_ID=your_client_id
+DEXCOM_CLIENT_SECRET=your_client_secret
+DEXCOM_REDIRECT_URI=http://localhost:8000/auth/dexcom/callback
+DEXCOM_SANDBOX=true</pre>
+        <p style="margin-top:10px;">
+          🔑 API 키는 <strong>developer.dexcom.com</strong>에서 앱을 등록하면 발급됩니다.<br>
+          테스트 시에는 <code style="background:#f3f4f6; padding:1px 5px; border-radius:4px;">DEXCOM_SANDBOX=true</code>를 사용하세요.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
