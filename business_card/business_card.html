@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>케어브릿지헬스 명함 — 심영은 대표이사</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    /* ──────────────────────────────────────────
+       디자인 토큰
+    ────────────────────────────────────────── */
+    :root {
+      --navy:      #0B2B4A;
+      --navy2:     #0D3D63;
+      --teal:      #0A8A7A;
+      --teal-lt:   #0DB89E;
+      --gold:      #C8973A;
+      --white:     #FFFFFF;
+      --gray:      #B0BEC5;
+    }
+
+    /* ──────────────────────────────────────────
+       화면 레이아웃 (인쇄 시 숨김)
+    ────────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      background: #DDE3E9;
+      padding: 48px 40px;
+    }
+
+    .screen-only {
+      display: block;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a2533;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .page-desc {
+      font-size: 13px;
+      color: #607080;
+      margin-bottom: 48px;
+      line-height: 1.7;
+    }
+
+    .group {
+      margin-bottom: 56px;
+    }
+
+    .group-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #8A9BAD;
+      margin-bottom: 14px;
+      padding-left: 2px;
+    }
+
+    .cards-row {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .card-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .card-side-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: #8A9BAD;
+      letter-spacing: 0.08em;
+    }
+
+    /* ──────────────────────────────────────────
+       명함 기본 (90mm × 50mm)
+    ────────────────────────────────────────── */
+    .card {
+      width: 90mm;
+      height: 50mm;
+      position: relative;
+      overflow: hidden;
+      border-radius: 2mm;
+      box-shadow:
+        0 12px 40px rgba(0,0,0,0.20),
+        0 3px 10px rgba(0,0,0,0.12);
+      flex-shrink: 0;
+    }
+
+    /* ══════════════════════════════════════════
+       옵션 A — 다크 네이비 + 텍스트 로고
+    ══════════════════════════════════════════ */
+    .a-front {
+      background: linear-gradient(135deg, #0B2B4A 0%, #0E3A5C 55%, #104A72 100%);
+    }
+
+    /* 상단 컬러 바 */
+    .a-front .top-bar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1.8mm;
+      background: linear-gradient(90deg, var(--teal) 0%, var(--teal-lt) 50%, var(--gold) 100%);
+    }
+
+    /* 우하단 장식 원 */
+    .a-front .deco {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(13, 184, 158, 0.15);
+    }
+    .a-front .deco-1 {
+      width: 28mm; height: 28mm;
+      right: -10mm; bottom: -10mm;
+    }
+    .a-front .deco-2 {
+      width: 18mm; height: 18mm;
+      right: -5mm; bottom: -5mm;
+      border-color: rgba(200, 151, 58, 0.20);
+    }
+    .a-front .deco-3 {
+      width: 9mm; height: 9mm;
+      right: 4mm; bottom: 4mm;
+      border-color: rgba(13, 184, 158, 0.25);
+      background: rgba(13, 184, 158, 0.06);
+    }
+
+    .a-front .inner {
+      position: relative;
+      z-index: 1;
+      padding: 6.5mm 7.5mm 6mm;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* 텍스트 로고 */
+    .a-front .logo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6mm;
+    }
+    .a-front .logo-ko {
+      font-size: 5mm;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      color: var(--white);
+      line-height: 1;
+    }
+    .a-front .logo-ko em {
+      font-style: normal;
+      color: var(--teal-lt);
+    }
+    .a-front .logo-en {
+      font-size: 2mm;
+      font-weight: 300;
+      letter-spacing: 0.32em;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+    }
+
+    /* 이름 / 직함 */
+    .a-front .person {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8mm;
+    }
+    .a-front .name-ko {
+      font-size: 5.8mm;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: var(--white);
+      line-height: 1;
+    }
+    .a-front .name-en {
+      font-size: 2.4mm;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      color: rgba(255,255,255,0.60);
+    }
+    .a-front .title {
+      margin-top: 0.8mm;
+      font-size: 2.6mm;
+      font-weight: 600;
+      color: var(--teal-lt);
+      letter-spacing: 0.06em;
+    }
+
+    /* 연락처 */
+    .a-front .contacts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7mm;
+    }
+    .a-front .ci {
+      display: flex;
+      align-items: center;
+      gap: 1.8mm;
+      font-size: 2.3mm;
+      color: rgba(255,255,255,0.72);
+    }
+    .a-front .ci svg {
+      width: 3mm;
+      height: 3mm;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    /* ──────── A 뒷면 ──────── */
+    .a-back {
+      background: linear-gradient(145deg, var(--teal) 0%, var(--teal-lt) 100%);
+    }
+    .a-back .inner {
+      padding: 7mm 8mm;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+    .a-back .back-logo {
+      font-size: 3.5mm;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      color: var(--white);
+    }
+    .a-back .back-logo span {
+      font-weight: 300;
+      color: rgba(255,255,255,0.60);
+    }
+    .a-back .slogan-ko {
+      font-size: 5mm;
+      font-weight: 700;
+      line-height: 1.45;
+      letter-spacing: 0.04em;
+      color: var(--white);
+    }
+    .a-back .slogan-en {
+      margin-top: 1.5mm;
+      font-size: 2.3mm;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.65);
+    }
+    .a-back .info {
+      font-size: 2mm;
+      color: rgba(255,255,255,0.60);
+      line-height: 1.9;
+    }
+    .a-back .deco-top {
+      position: absolute;
+      top: -10mm; right: -10mm;
+      width: 26mm; height: 26mm;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .a-back .deco-bot {
+      position: absolute;
+      bottom: -8mm; left: -8mm;
+      width: 20mm; height: 20mm;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    /* ══════════════════════════════════════════
+       옵션 B — 화이트 + SVG 아이콘 로고
+    ══════════════════════════════════════════ */
+    .b-front {
+      background: var(--white);
+    }
+    .b-front .side-bar {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 11mm;
+      background: linear-gradient(180deg, var(--navy) 0%, var(--navy2) 100%);
+    }
+    .b-front .side-accent {
+      position: absolute;
+      left: 0; bottom: 0;
+      width: 11mm;
+      height: 8mm;
+      background: var(--teal);
+    }
+    .b-front .inner {
+      padding: 5.5mm 6.5mm 5.5mm 14mm;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* 아이콘 + 텍스트 로고 */
+    .b-front .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 2.5mm;
+    }
+    .b-front .logo-icon {
+      width: 8.5mm;
+      height: 8.5mm;
+      flex-shrink: 0;
+    }
+    .b-front .logo-texts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4mm;
+    }
+    .b-front .logo-ko {
+      font-size: 4mm;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: var(--navy);
+      line-height: 1;
+    }
+    .b-front .logo-ko em {
+      font-style: normal;
+      color: var(--teal);
+    }
+    .b-front .logo-en {
+      font-size: 1.8mm;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      color: #A0AEB8;
+      text-transform: uppercase;
+    }
+
+    /* 인물 */
+    .b-front .person {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7mm;
+    }
+    .b-front .name-ko {
+      font-size: 5.8mm;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      color: var(--navy);
+      line-height: 1;
+    }
+    .b-front .name-en {
+      font-size: 2.3mm;
+      font-weight: 400;
+      color: #8A9BAD;
+    }
+    .b-front .title-badge {
+      display: inline-block;
+      margin-top: 1.2mm;
+      font-size: 2.4mm;
+      font-weight: 600;
+      color: var(--white);
+      background: var(--teal);
+      padding: 0.6mm 2.2mm;
+      border-radius: 0.8mm;
+      letter-spacing: 0.04em;
+    }
+
+    /* 연락처 */
+    .b-front .contacts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.7mm;
+    }
+    .b-front .ci {
+      display: flex;
+      align-items: center;
+      gap: 1.8mm;
+      font-size: 2.2mm;
+      color: #4A5D6E;
+    }
+    .b-front .ci svg {
+      width: 3mm;
+      height: 3mm;
+      flex-shrink: 0;
+      color: var(--teal);
+    }
+
+    /* ──────── B 뒷면 ──────── */
+    .b-back {
+      background: var(--white);
+      border: 0.5mm solid #E4ECF1;
+    }
+    .b-back .top-stripe {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2mm;
+      background: linear-gradient(90deg, var(--navy) 0%, var(--teal) 55%, var(--gold) 100%);
+    }
+    .b-back .bot-stripe {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1mm;
+      background: linear-gradient(90deg, var(--gold) 0%, var(--teal) 100%);
+    }
+    .b-back .inner {
+      padding: 6mm 9mm 6mm;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      text-align: center;
+    }
+    .b-back .icon-big {
+      width: 10mm;
+      height: 10mm;
+    }
+    .b-back .slogan-ko {
+      font-size: 5.5mm;
+      font-weight: 700;
+      line-height: 1.45;
+      letter-spacing: 0.04em;
+      color: var(--navy);
+    }
+    .b-back .slogan-ko strong {
+      color: var(--teal);
+    }
+    .b-back .slogan-en {
+      margin-top: 1.5mm;
+      font-size: 2.2mm;
+      font-weight: 300;
+      letter-spacing: 0.18em;
+      color: #8A9BAD;
+    }
+    .b-back .info {
+      font-size: 2mm;
+      color: #8A9BAD;
+      line-height: 2;
+    }
+
+    /* ──────────────────────────────────────────
+       슬로건 메모 (화면 전용)
+    ────────────────────────────────────────── */
+    .slogan-note {
+      background: white;
+      border-left: 3px solid var(--teal-lt);
+      padding: 16px 20px;
+      border-radius: 0 8px 8px 0;
+      max-width: 600px;
+      margin-top: 24px;
+    }
+    .slogan-note h3 {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #607080;
+      margin-bottom: 10px;
+    }
+    .slogan-note ol {
+      padding-left: 18px;
+    }
+    .slogan-note li {
+      font-size: 13px;
+      color: #2a3a4a;
+      margin-bottom: 6px;
+      line-height: 1.5;
+    }
+    .slogan-note li span {
+      font-size: 11px;
+      color: #8A9BAD;
+      font-style: italic;
+    }
+    .slogan-note .recommended {
+      display: inline-block;
+      font-size: 9px;
+      font-weight: 700;
+      background: var(--teal);
+      color: white;
+      padding: 1px 6px;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-left: 4px;
+    }
+
+    /* ──────────────────────────────────────────
+       인쇄 설정
+    ────────────────────────────────────────── */
+    @media print {
+      body {
+        background: white;
+        padding: 10mm;
+      }
+      .screen-only { display: none !important; }
+      .group-label { display: none; }
+
+      .card {
+        box-shadow: none;
+        border: 0.3mm solid #CCCCCC; /* 재단 가이드선 */
+        border-radius: 0;
+        page-break-inside: avoid;
+      }
+
+      .cards-row {
+        gap: 10mm;
+      }
+
+      .group {
+        margin-bottom: 10mm;
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── 화면 전용 헤더 ── -->
+<div class="screen-only">
+  <p class="page-title">케어브릿지헬스 명함 시안</p>
+  <p class="page-desc">
+    · 규격: 90 × 50 mm (표준 한국 명함)<br>
+    · 인쇄 방법: 브라우저에서 <strong>Ctrl+P → 배경 그래픽 포함 체크 → 여백 없음</strong> 으로 출력<br>
+    · 실제 인쇄용 파일은 동봉된 <code>logo.svg</code> 를 인쇄소에 함께 제출하세요
+  </p>
+</div>
+
+<!-- ════════════════════════════════════════
+     옵션 A — 다크 네이비 / 텍스트 로고
+═════════════════════════════════════════ -->
+<div class="group">
+  <p class="group-label screen-only">옵션 A — 다크 네이비 · 텍스트 로고</p>
+  <div class="cards-row">
+
+    <!-- A 앞면 -->
+    <div class="card-wrapper">
+      <p class="card-side-label screen-only">앞면 (Front)</p>
+      <div class="card a-front">
+        <div class="top-bar"></div>
+        <div class="deco deco-1"></div>
+        <div class="deco deco-2"></div>
+        <div class="deco deco-3"></div>
+        <div class="inner">
+          <!-- 로고 -->
+          <div class="logo">
+            <div class="logo-ko"><em>케어</em>브릿지헬스</div>
+            <div class="logo-en">C A R E B R I D G E &nbsp; H E A L T H</div>
+          </div>
+          <!-- 인물 -->
+          <div class="person">
+            <div class="name-ko">심영은</div>
+            <div class="name-en">Youngeun Sim</div>
+            <div class="title">대표이사 &nbsp;/&nbsp; CEO</div>
+          </div>
+          <!-- 연락처 -->
+          <div class="contacts">
+            <div class="ci">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.32C1.58 2.18 2.4 1 3.54 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.51a16 16 0 0 0 5.9 5.9l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
+              010-9870-0831
+            </div>
+            <div class="ci">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              2015sim@naver.com
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- A 뒷면 -->
+    <div class="card-wrapper">
+      <p class="card-side-label screen-only">뒷면 (Back)</p>
+      <div class="card a-back">
+        <div class="deco-top"></div>
+        <div class="deco-bot"></div>
+        <div class="inner">
+          <div class="back-logo">케어브릿지헬스 <span>/ CareB Health</span></div>
+          <div>
+            <div class="slogan-ko">건강을 잇다,<br>삶을 바꾸다</div>
+            <div class="slogan-en">Bridging Health · Changing Lives</div>
+          </div>
+          <div class="info">
+            2015sim@naver.com<br>
+            010-9870-0831
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     옵션 B — 화이트 / SVG 아이콘 로고
+═════════════════════════════════════════ -->
+<div class="group">
+  <p class="group-label screen-only">옵션 B — 화이트 · 아이콘 로고</p>
+  <div class="cards-row">
+
+    <!-- B 앞면 -->
+    <div class="card-wrapper">
+      <p class="card-side-label screen-only">앞면 (Front)</p>
+      <div class="card b-front">
+        <div class="side-bar"></div>
+        <div class="side-accent"></div>
+        <div class="inner">
+          <!-- 아이콘 + 텍스트 로고 -->
+          <div class="logo-area">
+            <svg class="logo-icon" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- 왼쪽 타워 -->
+              <rect x="10" y="18" width="4" height="20" rx="1" fill="#0B2B4A"/>
+              <!-- 오른쪽 타워 -->
+              <rect x="34" y="18" width="4" height="20" rx="1" fill="#0B2B4A"/>
+              <!-- 케이블 스테이 (왼쪽) -->
+              <line x1="12" y1="20" x2="4"  y2="36" stroke="#0A8A7A" stroke-width="1.4" stroke-linecap="round"/>
+              <line x1="12" y1="22" x2="19" y2="36" stroke="#0A8A7A" stroke-width="1.4" stroke-linecap="round"/>
+              <!-- 케이블 스테이 (오른쪽) -->
+              <line x1="36" y1="20" x2="44" y2="36" stroke="#0A8A7A" stroke-width="1.4" stroke-linecap="round"/>
+              <line x1="36" y1="22" x2="29" y2="36" stroke="#0A8A7A" stroke-width="1.4" stroke-linecap="round"/>
+              <!-- 교량 상판 -->
+              <rect x="3" y="36" width="42" height="3.5" rx="1.5" fill="#0B2B4A" opacity="0.85"/>
+              <!-- 하트 (건강 상징) -->
+              <path d="M21.5 10 C21.5 7.5 24 6 24 8 C24 6 26.5 7.5 26.5 10 C26.5 12.5 24 15 24 15 C24 15 21.5 12.5 21.5 10Z"
+                    fill="#0DB89E"/>
+              <!-- 타워 상단 장식 -->
+              <rect x="9"  y="15" width="6" height="4" rx="0.8" fill="#0B2B4A"/>
+              <rect x="33" y="15" width="6" height="4" rx="0.8" fill="#0B2B4A"/>
+            </svg>
+            <div class="logo-texts">
+              <div class="logo-ko"><em>케어</em>브릿지헬스</div>
+              <div class="logo-en">CareBridge Health</div>
+            </div>
+          </div>
+
+          <!-- 인물 -->
+          <div class="person">
+            <div class="name-ko">심영은</div>
+            <div class="name-en">Youngeun Sim</div>
+            <div class="title-badge">대표이사 / CEO</div>
+          </div>
+
+          <!-- 연락처 -->
+          <div class="contacts">
+            <div class="ci">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.6 3.32C1.58 2.18 2.4 1 3.54 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.51a16 16 0 0 0 5.9 5.9l.92-.92a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 21.73 16z"/></svg>
+              010-9870-0831
+            </div>
+            <div class="ci">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              2015sim@naver.com
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B 뒷면 -->
+    <div class="card-wrapper">
+      <p class="card-side-label screen-only">뒷면 (Back)</p>
+      <div class="card b-back">
+        <div class="top-stripe"></div>
+        <div class="bot-stripe"></div>
+        <div class="inner">
+          <svg class="icon-big" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="18" width="4" height="20" rx="1" fill="#0B2B4A"/>
+            <rect x="34" y="18" width="4" height="20" rx="1" fill="#0B2B4A"/>
+            <line x1="12" y1="20" x2="4"  y2="36" stroke="#0A8A7A" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="12" y1="22" x2="19" y2="36" stroke="#0A8A7A" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="36" y1="20" x2="44" y2="36" stroke="#0A8A7A" stroke-width="1.4" stroke-linecap="round"/>
+            <line x1="36" y1="22" x2="29" y2="36" stroke="#0A8A7A" stroke-width="1.4" stroke-linecap="round"/>
+            <rect x="3" y="36" width="42" height="3.5" rx="1.5" fill="#0B2B4A" opacity="0.85"/>
+            <path d="M21.5 10 C21.5 7.5 24 6 24 8 C24 6 26.5 7.5 26.5 10 C26.5 12.5 24 15 24 15 C24 15 21.5 12.5 21.5 10Z" fill="#0DB89E"/>
+            <rect x="9"  y="15" width="6" height="4" rx="0.8" fill="#0B2B4A"/>
+            <rect x="33" y="15" width="6" height="4" rx="0.8" fill="#0B2B4A"/>
+          </svg>
+          <div>
+            <div class="slogan-ko"><strong>건강을 잇다,</strong><br>삶을 바꾸다</div>
+            <div class="slogan-en">Bridging Health · Changing Lives</div>
+          </div>
+          <div class="info">
+            2015sim@naver.com&nbsp;&nbsp;·&nbsp;&nbsp;010-9870-0831
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── 슬로건 제안 (화면 전용) ── -->
+<div class="screen-only slogan-note">
+  <h3>슬로건 후보</h3>
+  <ol>
+    <li>
+      <strong>건강을 잇다, 삶을 바꾸다</strong>
+      <span class="recommended">추천</span><br>
+      <span>Bridging Health, Changing Lives — 강하고 기억하기 쉬움. 현재 명함에 적용됨.</span>
+    </li>
+    <li>
+      <strong>당신의 건강을 잇는 다리</strong><br>
+      <span>A Bridge for Your Health — 따뜻하고 개인적인 느낌.</span>
+    </li>
+    <li>
+      <strong>연결이 만드는 건강한 세상</strong><br>
+      <span>A Healthy World, Built on Connections — 비전 지향적, 스케일이 큼.</span>
+    </li>
+  </ol>
+</div>
+
+</body>
+</html>
