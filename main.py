@@ -17,6 +17,9 @@ from models import ALL_DAYS, DAY_LABELS, REGION_LABELS, SPECIALTY_LABELS
 
 app = FastAPI(title="NutriMatch — 영양사 매칭 플랫폼")
 
+from catering.router import router as catering_router
+app.include_router(catering_router)
+
 # DB 테이블 생성
 Base.metadata.create_all(bind=engine)
 
