@@ -1,0 +1,23 @@
+{% set path = request.url.path %}
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
+    <div class="nav-links">
+      <a href="/" {% if path == '/' %}class="active"{% endif %}>홈</a>
+      <a href="/nutritionists" {% if path == '/nutritionists' %}class="active"{% endif %}>영양사 목록</a>
+      {% if user and user.role == 'company' %}
+        <a href="/companies/request" {% if path == '/companies/request' %}class="active"{% endif %}>서비스 신청</a>
+        <a href="/companies/my" {% if path == '/companies/my' %}class="active"{% endif %}>내 신청</a>
+        <a href="/bookings" {% if path == '/bookings' %}class="active"{% endif %}>예약 현황</a>
+        <a href="/logout" title="{{ user.company_name or user.name }}">로그아웃</a>
+      {% elif user and user.role == 'nutritionist' %}
+        <a href="/me" {% if path == '/me' %}class="active"{% endif %}>내 프로필</a>
+        <a href="/bookings" {% if path == '/bookings' %}class="active"{% endif %}>예약 현황</a>
+        <a href="/logout" title="{{ user.name }}">로그아웃</a>
+      {% else %}
+        <a href="/login" {% if path == '/login' %}class="active"{% endif %}>로그인</a>
+        <a href="/signup" {% if path.startswith('/signup') %}class="active"{% endif %}>회원가입</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원가입 — NutriMatch</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "partials/_nav.html" %}
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1>✨ 회원가입</h1>
+    <p>어떤 유형으로 가입하시겠어요?</p>
+  </div>
+</div>
+
+<div class="page-body">
+  <div class="container" style="max-width: 760px;">
+    <div class="feature-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+      <a href="/signup/nutritionist" class="feature-card" style="text-decoration: none; color: inherit; display: block;">
+        <div class="feature-icon">👩‍⚕️</div>
+        <h3>영양사로 가입</h3>
+        <p>프로필과 상담 조건을 등록하면 조건에 맞는 기업과 자동으로 매칭됩니다.</p>
+        <div style="margin-top: 16px;"><span class="btn btn-green btn-sm">영양사 가입하기</span></div>
+      </a>
+      <a href="/signup/company" class="feature-card" style="text-decoration: none; color: inherit; display: block;">
+        <div class="feature-icon">🏢</div>
+        <h3>기업으로 가입</h3>
+        <p>서비스 수요를 등록하면 최적의 영양사를 추천받고 예약까지 관리할 수 있습니다.</p>
+        <div style="margin-top: 16px;"><span class="btn btn-primary btn-sm">기업 가입하기</span></div>
+      </a>
+    </div>
+
+    <div style="text-align: center; margin-top: 28px; font-size: 14px; color: var(--text-sub);">
+      이미 계정이 있으신가요? <a href="/login" style="color: var(--accent-dark); font-weight: 600;">로그인</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

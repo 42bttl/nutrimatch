@@ -9,6 +9,8 @@ services:
         fromDatabase:
           name: nutrimatch-db
           property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
 
 databases:
   - name: nutrimatch-db

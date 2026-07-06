@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>기업 가입 — NutriMatch</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "partials/_nav.html" %}
+
+<div class="page-body">
+  <div class="container" style="max-width: 560px;">
+    <div class="form-card">
+      <div class="form-card-header">
+        <h1>🏢 기업 회원가입</h1>
+        <p>계정을 만들고 영양사 매칭 서비스를 신청하세요</p>
+      </div>
+      <div class="form-card-body">
+
+        {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/signup/company">
+
+          <div class="form-section">
+            <div class="form-section-title">계정 정보</div>
+
+            <div class="form-group">
+              <label class="required" for="email">이메일 (로그인 아이디)</label>
+              <input type="email" id="email" name="email" placeholder="manager@company.com"
+                     required value="{{ form.email or '' }}">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="required" for="password">비밀번호 (8자 이상)</label>
+                <input type="password" id="password" name="password" minlength="8" required>
+              </div>
+              <div class="form-group">
+                <label class="required" for="password_confirm">비밀번호 확인</label>
+                <input type="password" id="password_confirm" name="password_confirm" minlength="8" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">기업 정보</div>
+
+            <div class="form-group">
+              <label class="required" for="company_name">기업명</label>
+              <input type="text" id="company_name" name="company_name"
+                     placeholder="(주)헬시컴퍼니" required value="{{ form.company_name or '' }}">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="required" for="contact_name">담당자 이름</label>
+                <input type="text" id="contact_name" name="contact_name"
+                       placeholder="김담당" required value="{{ form.contact_name or '' }}">
+              </div>
+              <div class="form-group">
+                <label class="required" for="phone">담당자 연락처</label>
+                <input type="tel" id="phone" name="phone" placeholder="010-0000-0000"
+                       required value="{{ form.phone or '' }}">
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full" style="font-size: 16px; padding: 14px;">
+            가입하기
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-sub);">
+          이미 계정이 있으신가요? <a href="/login" style="color: var(--accent-dark); font-weight: 600;">로그인</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const pw = document.getElementById('password').value;
+    const pw2 = document.getElementById('password_confirm').value;
+    if (pw !== pw2) {
+      e.preventDefault();
+      alert('비밀번호가 서로 일치하지 않습니다.');
+    }
+  });
+</script>
+
+</body>
+</html>

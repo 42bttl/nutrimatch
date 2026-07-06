@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 신청 내역 — NutriMatch</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "partials/_nav.html" %}
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1>🏢 내 신청 내역</h1>
+    <p>{{ user.company_name or user.name }} 님의 서비스 신청 {{ requests|length }}건</p>
+  </div>
+</div>
+
+<div class="page-body">
+  <div class="container">
+
+    {% if requests %}
+    <div class="booking-table-wrap">
+      <table class="booking-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>서비스 유형</th>
+            <th>희망 지역</th>
+            <th>희망 분야</th>
+            <th>예산(시간당)</th>
+            <th>신청일</th>
+            <th>매칭 결과</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in requests %}
+          <tr>
+            <td style="color: var(--text-light);">{{ r.id }}</td>
+            <td><span class="badge badge-blue">{{ r.service_type_label }}</span></td>
+            <td><span class="badge badge-green">{{ r.region_label }}</span></td>
+            <td><span class="badge badge-purple">{{ r.specialty_label }}</span></td>
+            <td style="font-weight: 600;">{{ r.budget_per_hour | krw }}</td>
+            <td style="color: var(--text-sub); font-size: 13px;">{{ r.created_at.strftime('%Y.%m.%d') }}</td>
+            <td><a href="/matching/{{ r.id }}" class="btn btn-outline btn-sm">결과 보기</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div style="margin-top: 20px; text-align: center;">
+      <a href="/companies/request" class="btn btn-primary">🎯 새 서비스 신청</a>
+    </div>
+    {% else %}
+    <div class="empty-state" style="max-width: 500px; margin: 40px auto;">
+      <div class="empty-icon">📭</div>
+      <h3>아직 신청 내역이 없습니다</h3>
+      <p>수요를 등록하면 조건에 맞는 영양사를 바로 추천해드립니다.</p>
+      <a href="/companies/request" class="btn btn-primary">서비스 신청하기</a>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+</body>
+</html>

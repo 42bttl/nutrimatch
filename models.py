@@ -83,7 +83,33 @@ DAY_LABELS = {
 ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 
+ROLE_LABELS = {
+    "nutritionist": "영양사",
+    "company": "기업",
+}
+
+
 # --- 모델 ---
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False)  # nutritionist | company
+    name = Column(String(50), nullable=False)
+    phone = Column(String(20), nullable=True)
+    company_name = Column(String(100), nullable=True)  # role=company 전용
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    nutritionist = relationship("Nutritionist", back_populates="user", uselist=False)
+    company_requests = relationship("CompanyRequest", back_populates="user")
+
+    @property
+    def role_label(self):
+        return ROLE_LABELS.get(self.role, self.role)
+
 
 class Nutritionist(Base):
     __tablename__ = "nutritionists"
@@ -101,8 +127,10 @@ class Nutritionist(Base):
     email = Column(String(100), unique=True, nullable=False)
     phone = Column(String(20), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # 레거시 데이터는 NULL
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    user = relationship("User", back_populates="nutritionist")
     match_results = relationship("MatchResult", back_populates="nutritionist")
     bookings = relationship("Booking", back_populates="nutritionist")
 
@@ -141,8 +169,10 @@ class CompanyRequest(Base):
     preferred_time_start = Column(Time, nullable=False)
     preferred_time_end = Column(Time, nullable=False)
     notes = Column(Text, nullable=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # 레거시 데이터는 NULL
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
+    user = relationship("User", back_populates="company_requests")
     match_results = relationship("MatchResult", back_populates="request")
     bookings = relationship("Booking", back_populates="request")
 

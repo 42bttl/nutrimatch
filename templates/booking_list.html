@@ -8,23 +8,16 @@
 </head>
 <body>
 
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
-    <div class="nav-links">
-      <a href="/">홈</a>
-      <a href="/nutritionists">영양사 목록</a>
-      <a href="/nutritionists/register">영양사 등록</a>
-      <a href="/companies/request">서비스 신청</a>
-      <a href="/bookings" class="active">예약 현황</a>
-    </div>
-  </div>
-</nav>
+{% include "partials/_nav.html" %}
 
 <div class="page-header">
   <div class="page-header-inner">
     <h1>📅 예약 현황</h1>
-    <p>전체 예약 신청 목록과 상태를 관리합니다</p>
+    {% if user.role == 'nutritionist' %}
+    <p>나에게 들어온 예약을 확인하고 확정/완료 처리하세요</p>
+    {% else %}
+    <p>내가 신청한 예약의 진행 상태를 확인하세요</p>
+    {% endif %}
   </div>
 </div>
 
@@ -61,6 +54,7 @@
           <th>영양사</th>
           <th>전문분야</th>
           <th>서비스 유형</th>
+          <th>연락처</th>
           <th>신청일</th>
           <th>상태</th>
           <th>액션</th>
@@ -74,6 +68,17 @@
           <td>{{ b.nutritionist.name }}</td>
           <td><span class="badge badge-green">{{ b.nutritionist.specialty_label }}</span></td>
           <td><span class="badge badge-blue">{{ b.request.service_type_label }}</span></td>
+          <td style="font-size: 12px; color: var(--text-sub);">
+            {% if b.status in ('confirmed', 'completed') %}
+              {% if user.role == 'nutritionist' %}
+                {{ b.request.contact_name }}<br>{{ b.request.contact_phone }}<br>{{ b.request.contact_email }}
+              {% else %}
+                {{ b.nutritionist.phone }}<br>{{ b.nutritionist.email }}
+              {% endif %}
+            {% else %}
+              🔒 확정 후 공개
+            {% endif %}
+          </td>
           <td style="color: var(--text-sub); font-size: 13px;">
             {{ b.created_at.strftime('%Y.%m.%d') }}
           </td>
@@ -82,26 +87,38 @@
           </td>
           <td>
             <div class="booking-actions">
-              {% if b.status == 'pending' %}
-                <form method="POST" action="/bookings/{{ b.id }}/confirm" style="margin:0;">
-                  <button type="submit" class="btn btn-green btn-sm">확정</button>
-                </form>
-                <form method="POST" action="/bookings/{{ b.id }}/cancel" style="margin:0;">
-                  <button type="submit" class="btn btn-sm"
-                          style="background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A;"
-                          onclick="return confirm('예약을 취소하시겠습니까?')">취소</button>
-                </form>
-              {% elif b.status == 'confirmed' %}
-                <form method="POST" action="/bookings/{{ b.id }}/complete" style="margin:0;">
-                  <button type="submit" class="btn btn-outline btn-sm">완료</button>
-                </form>
-                <form method="POST" action="/bookings/{{ b.id }}/cancel" style="margin:0;">
-                  <button type="submit" class="btn btn-sm"
-                          style="background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A;"
-                          onclick="return confirm('예약을 취소하시겠습니까?')">취소</button>
-                </form>
+              {% if user.role == 'nutritionist' %}
+                {% if b.status == 'pending' %}
+                  <form method="POST" action="/bookings/{{ b.id }}/confirm" style="margin:0;">
+                    <button type="submit" class="btn btn-green btn-sm">확정</button>
+                  </form>
+                  <form method="POST" action="/bookings/{{ b.id }}/cancel" style="margin:0;">
+                    <button type="submit" class="btn btn-sm"
+                            style="background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A;"
+                            onclick="return confirm('예약을 거절(취소)하시겠습니까?')">거절</button>
+                  </form>
+                {% elif b.status == 'confirmed' %}
+                  <form method="POST" action="/bookings/{{ b.id }}/complete" style="margin:0;">
+                    <button type="submit" class="btn btn-outline btn-sm">완료</button>
+                  </form>
+                  <form method="POST" action="/bookings/{{ b.id }}/cancel" style="margin:0;">
+                    <button type="submit" class="btn btn-sm"
+                            style="background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A;"
+                            onclick="return confirm('예약을 취소하시겠습니까?')">취소</button>
+                  </form>
+                {% else %}
+                  <span style="color: var(--text-light); font-size: 13px;">—</span>
+                {% endif %}
               {% else %}
-                <span style="color: var(--text-light); font-size: 13px;">—</span>
+                {% if b.status in ('pending', 'confirmed') %}
+                  <form method="POST" action="/bookings/{{ b.id }}/cancel" style="margin:0;">
+                    <button type="submit" class="btn btn-sm"
+                            style="background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A;"
+                            onclick="return confirm('예약을 취소하시겠습니까?')">취소</button>
+                  </form>
+                {% else %}
+                  <span style="color: var(--text-light); font-size: 13px;">—</span>
+                {% endif %}
               {% endif %}
             </div>
           </td>
@@ -114,8 +131,13 @@
   <div class="empty-state">
     <div class="empty-icon">📭</div>
     <h3>예약 내역이 없습니다</h3>
+    {% if user.role == 'nutritionist' %}
+    <p>기업이 매칭 결과에서 예약을 신청하면 여기에 표시됩니다.</p>
+    <a href="/me" class="btn btn-green">내 프로필 관리</a>
+    {% else %}
     <p>서비스를 신청하고 영양사를 매칭받아 보세요.</p>
     <a href="/companies/request" class="btn btn-green">서비스 신청하기</a>
+    {% endif %}
   </div>
   {% endif %}
 

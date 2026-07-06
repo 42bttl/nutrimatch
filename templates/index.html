@@ -8,18 +8,7 @@
 </head>
 <body>
 
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
-    <div class="nav-links">
-      <a href="/" class="active">홈</a>
-      <a href="/nutritionists">영양사 목록</a>
-      <a href="/nutritionists/register">영양사 등록</a>
-      <a href="/companies/request">서비스 신청</a>
-      <a href="/bookings">예약 현황</a>
-    </div>
-  </div>
-</nav>
+{% include "partials/_nav.html" %}
 
 {% if seed_msg %}
 <div class="alert alert-success" style="max-width: 800px; margin: 16px auto;">✅ {{ seed_msg }}</div>
@@ -30,8 +19,16 @@
   <h1>기업 맞춤 영양사<br>매칭 플랫폼</h1>
   <p>전문 임상영양사와 기업을 스마트하게 연결합니다<br>직원 건강 증진, 지금 시작하세요</p>
   <div class="hero-cta">
-    <a href="/companies/request" class="btn btn-primary">🏢 서비스 신청하기</a>
-    <a href="/nutritionists/register" class="btn btn-secondary">👩‍⚕️ 영양사로 등록하기</a>
+    {% if user and user.role == 'company' %}
+      <a href="/companies/request" class="btn btn-primary">🏢 서비스 신청하기</a>
+      <a href="/companies/my" class="btn btn-secondary">📋 내 신청 내역</a>
+    {% elif user and user.role == 'nutritionist' %}
+      <a href="/me" class="btn btn-primary">👩‍⚕️ 내 프로필 관리</a>
+      <a href="/bookings" class="btn btn-secondary">📅 예약 현황</a>
+    {% else %}
+      <a href="/signup/company" class="btn btn-primary">🏢 기업으로 시작하기</a>
+      <a href="/signup/nutritionist" class="btn btn-secondary">👩‍⚕️ 영양사로 등록하기</a>
+    {% endif %}
   </div>
 </section>
 
@@ -76,14 +73,16 @@
 </section>
 
 <!-- 하단 CTA -->
+{% if not user %}
 <section style="background: #E8F5E9; padding: 64px 24px; text-align: center;">
   <h2 style="font-size: 1.6rem; font-weight: 700; margin-bottom: 12px;">지금 바로 시작하세요</h2>
-  <p style="color: var(--text-sub); margin-bottom: 28px;">샘플 영양사 데이터를 먼저 확인하고 싶으신가요?</p>
+  <p style="color: var(--text-sub); margin-bottom: 28px;">영양사와 기업 모두 무료로 가입할 수 있습니다</p>
   <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
-    <a href="/seed" class="btn btn-green">📥 샘플 데이터 로드</a>
+    <a href="/signup" class="btn btn-green">✨ 회원가입</a>
     <a href="/nutritionists" class="btn btn-outline">영양사 목록 보기</a>
   </div>
 </section>
+{% endif %}
 
 </body>
 </html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 프로필 — NutriMatch</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "partials/_nav.html" %}
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1>👩‍⚕️ 내 프로필</h1>
+    <p>{{ profile.name }} 님 ({{ profile.specialty_label }} · {{ profile.region_label }})</p>
+  </div>
+</div>
+
+{% if request.query_params.get('welcome') %}
+<div class="success-banner">🎉 가입을 환영합니다! 프로필이 등록되어 기업 매칭에 참여 중입니다.</div>
+{% endif %}
+{% if request.query_params.get('saved') %}
+<div class="success-banner">✅ 프로필이 저장되었습니다.</div>
+{% endif %}
+
+<div class="page-body">
+  <div class="container">
+
+    <div class="form-card">
+      <div class="form-card-header">
+        <h1 style="font-size: 1.2rem;">프로필 관리</h1>
+        <p>이름 · 면허번호 · 이메일은 변경할 수 없습니다. 변경이 필요하면 관리자에게 문의하세요.</p>
+      </div>
+      <div class="form-card-body">
+
+        {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/me">
+
+          <div class="form-section">
+            <div class="form-section-title">기본 정보</div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>이름</label>
+                <input type="text" value="{{ profile.name }}" disabled>
+              </div>
+              <div class="form-group">
+                <label>면허 번호</label>
+                <input type="text" value="{{ profile.license_number }}" disabled>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>이메일</label>
+                <input type="email" value="{{ profile.email }}" disabled>
+              </div>
+              <div class="form-group">
+                <label class="required" for="phone">연락처</label>
+                <input type="tel" id="phone" name="phone" required value="{{ profile.phone }}">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="required" for="specialty">전문 분야</label>
+                <select id="specialty" name="specialty" required>
+                  {% for val, label in [('clinical','임상영양'),('sports','스포츠영양'),('elderly','노인영양'),('pediatric','소아영양')] %}
+                  <option value="{{ val }}" {% if profile.specialty == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="required" for="region">활동 지역</label>
+                <select id="region" name="region" required>
+                  {% for val, label in [('seoul','서울'),('gyeonggi','경기'),('incheon','인천'),('busan','부산'),('daegu','대구'),('gwangju','광주'),('daejeon','대전'),('ulsan','울산'),('sejong','세종'),('gangwon','강원'),('chungbuk','충북'),('chungnam','충남'),('jeonbuk','전북'),('jeonnam','전남'),('gyeongbuk','경북'),('gyeongnam','경남'),('jeju','제주')] %}
+                  <option value="{{ val }}" {% if profile.region == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">상담 조건</div>
+            <div class="form-group">
+              <label class="required">가능 요일</label>
+              <div class="checkbox-group">
+                {% for day_val, day_label in [('mon','월'), ('tue','화'), ('wed','수'), ('thu','목'), ('fri','금'), ('sat','토'), ('sun','일')] %}
+                <label class="checkbox-item">
+                  <input type="checkbox" name="available_days" value="{{ day_val }}"
+                         {% if day_val in profile.available_days_list %}checked{% endif %}>
+                  {{ day_label }}요일
+                </label>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="required" for="available_time_start">가능 시작 시간</label>
+                <input type="time" id="available_time_start" name="available_time_start" required
+                       value="{{ profile.available_time_start.strftime('%H:%M') }}">
+              </div>
+              <div class="form-group">
+                <label class="required" for="available_time_end">가능 종료 시간</label>
+                <input type="time" id="available_time_end" name="available_time_end" required
+                       value="{{ profile.available_time_end.strftime('%H:%M') }}">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="required" for="hourly_rate">시간당 요금 (원)</label>
+              <input type="number" id="hourly_rate" name="hourly_rate" min="0" step="1000"
+                     required value="{{ profile.hourly_rate }}">
+            </div>
+            <div class="form-group">
+              <label class="checkbox-item" style="display: inline-flex;">
+                <input type="checkbox" name="is_active" value="1" {% if profile.is_active %}checked{% endif %}>
+                매칭 활성화 (해제하면 영양사 목록과 신규 매칭에서 제외됩니다)
+              </label>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="form-section-title">소개</div>
+            <div class="form-group">
+              <label for="bio">자기소개</label>
+              <textarea id="bio" name="bio" rows="4">{{ profile.bio or '' }}</textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-green btn-full" style="font-size: 16px; padding: 14px;">
+            프로필 저장
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 내 예약 요약 -->
+    <div class="form-card" style="margin-top: 24px;">
+      <div class="form-card-header">
+        <h1 style="font-size: 1.2rem;">📅 나에게 들어온 예약</h1>
+        <p>대기 {{ bookings|selectattr('status','equalto','pending')|list|length }}건 ·
+           확정 {{ bookings|selectattr('status','equalto','confirmed')|list|length }}건 ·
+           완료 {{ bookings|selectattr('status','equalto','completed')|list|length }}건</p>
+      </div>
+      <div class="form-card-body">
+        {% if bookings %}
+        <p style="font-size: 14px; color: var(--text-sub); margin-bottom: 12px;">
+          예약 확정/완료 처리는 <a href="/bookings" style="color: var(--accent-dark); font-weight: 600;">예약 현황</a>에서 할 수 있습니다.
+        </p>
+        {% else %}
+        <p style="font-size: 14px; color: var(--text-sub);">아직 들어온 예약이 없습니다. 기업이 매칭 후 예약을 신청하면 여기에 표시됩니다.</p>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

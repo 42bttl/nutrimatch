@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 — NutriMatch</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "partials/_nav.html" %}
+
+<div class="page-body">
+  <div class="container" style="max-width: 460px;">
+    <div class="form-card">
+      <div class="form-card-header">
+        <h1>🔐 로그인</h1>
+        <p>NutriMatch 계정으로 로그인하세요</p>
+      </div>
+      <div class="form-card-body">
+
+        {% if error %}
+        <div class="alert alert-error">⚠️ {{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="/login">
+          <input type="hidden" name="next" value="{{ next or '/' }}">
+          <div class="form-group">
+            <label class="required" for="email">이메일</label>
+            <input type="email" id="email" name="email" placeholder="example@email.com" required autofocus>
+          </div>
+          <div class="form-group">
+            <label class="required" for="password">비밀번호</label>
+            <input type="password" id="password" name="password" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" style="font-size: 15px; padding: 13px; margin-top: 8px;">
+            로그인
+          </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-sub);">
+          아직 계정이 없으신가요? <a href="/signup" style="color: var(--accent-dark); font-weight: 600;">회원가입</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

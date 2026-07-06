@@ -8,18 +8,7 @@
 </head>
 <body>
 
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
-    <div class="nav-links">
-      <a href="/">홈</a>
-      <a href="/nutritionists">영양사 목록</a>
-      <a href="/nutritionists/register">영양사 등록</a>
-      <a href="/companies/request">서비스 신청</a>
-      <a href="/bookings">예약 현황</a>
-    </div>
-  </div>
-</nav>
+{% include "partials/_nav.html" %}
 
 {% if request.query_params.get('status') == 'success' %}
 <div class="success-banner">
@@ -202,7 +191,11 @@
 
         <div class="result-card-footer">
           <div style="font-size: 13px; color: var(--text-sub);">
-            📧 {{ n.email }} &nbsp;|&nbsp; 📞 {{ n.phone }}
+            {% if result.booking and result.booking.status in ('confirmed', 'completed') %}
+              📧 {{ n.email }} &nbsp;|&nbsp; 📞 {{ n.phone }}
+            {% else %}
+              🔒 연락처는 예약 확정 후 공개됩니다
+            {% endif %}
           </div>
           {% if result.booking %}
             <span class="badge {% if result.booking.status == 'pending' %}status-pending{% elif result.booking.status == 'confirmed' %}status-confirmed{% elif result.booking.status == 'completed' %}status-completed{% else %}status-cancelled{% endif %}">

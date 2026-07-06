@@ -8,18 +8,11 @@
 </head>
 <body>
 
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
-    <div class="nav-links">
-      <a href="/">홈</a>
-      <a href="/nutritionists">영양사 목록</a>
-      <a href="/nutritionists/register">영양사 등록</a>
-      <a href="/companies/request" class="active">서비스 신청</a>
-      <a href="/bookings">예약 현황</a>
-    </div>
-  </div>
-</nav>
+{% include "partials/_nav.html" %}
+
+{% if request.query_params.get('welcome') %}
+<div class="success-banner">🎉 가입을 환영합니다! 아래에서 첫 서비스 수요를 등록해보세요.</div>
+{% endif %}
 
 <div class="page-body">
   <div class="container">
@@ -43,7 +36,8 @@
             <div class="form-group">
               <label class="required" for="company_name">기업명</label>
               <input type="text" id="company_name" name="company_name"
-                     placeholder="(주)헬시컴퍼니" required>
+                     placeholder="(주)헬시컴퍼니" required
+                     value="{{ user.company_name or '' }}">
             </div>
 
             <div class="form-group">
@@ -68,19 +62,19 @@
               <div class="form-group">
                 <label class="required" for="contact_name">담당자 이름</label>
                 <input type="text" id="contact_name" name="contact_name"
-                       placeholder="김담당" required>
+                       placeholder="김담당" required value="{{ user.name or '' }}">
               </div>
               <div class="form-group">
                 <label class="required" for="contact_email">담당자 이메일</label>
                 <input type="email" id="contact_email" name="contact_email"
-                       placeholder="manager@company.com" required>
+                       placeholder="manager@company.com" required value="{{ user.email or '' }}">
               </div>
             </div>
 
             <div class="form-group">
               <label class="required" for="contact_phone">담당자 연락처</label>
               <input type="tel" id="contact_phone" name="contact_phone"
-                     placeholder="010-0000-0000" required>
+                     placeholder="010-0000-0000" required value="{{ user.phone or '' }}">
             </div>
           </div>
 

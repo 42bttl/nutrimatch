@@ -3,30 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>영양사 등록 — NutriMatch</title>
+  <title>영양사 가입 — NutriMatch</title>
   <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
-<nav class="nav">
-  <div class="nav-inner">
-    <a href="/" class="nav-logo"><span>🥗</span> NutriMatch</a>
-    <div class="nav-links">
-      <a href="/">홈</a>
-      <a href="/nutritionists">영양사 목록</a>
-      <a href="/nutritionists/register" class="active">영양사 등록</a>
-      <a href="/companies/request">서비스 신청</a>
-      <a href="/bookings">예약 현황</a>
-    </div>
-  </div>
-</nav>
+{% include "partials/_nav.html" %}
 
 <div class="page-body">
   <div class="container">
     <div class="form-card">
       <div class="form-card-header">
-        <h1>👩‍⚕️ 영양사 등록</h1>
-        <p>전문 영양사로 등록하고 기업 고객과 연결되세요</p>
+        <h1>👩‍⚕️ 영양사 회원가입</h1>
+        <p>계정을 만들고 프로필을 등록하면 기업 매칭에 바로 참여할 수 있습니다</p>
       </div>
       <div class="form-card-body">
 
@@ -34,7 +23,29 @@
         <div class="alert alert-error">⚠️ {{ error }}</div>
         {% endif %}
 
-        <form method="POST" action="/nutritionists/register">
+        <form method="POST" action="/signup/nutritionist">
+
+          <!-- 계정 정보 -->
+          <div class="form-section">
+            <div class="form-section-title">계정 정보</div>
+
+            <div class="form-group">
+              <label class="required" for="email">이메일 (로그인 아이디)</label>
+              <input type="email" id="email" name="email" placeholder="example@email.com"
+                     required value="{{ form.email or '' }}">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="required" for="password">비밀번호 (8자 이상)</label>
+                <input type="password" id="password" name="password" minlength="8" required>
+              </div>
+              <div class="form-group">
+                <label class="required" for="password_confirm">비밀번호 확인</label>
+                <input type="password" id="password_confirm" name="password_confirm" minlength="8" required>
+              </div>
+            </div>
+          </div>
 
           <!-- 기본 정보 -->
           <div class="form-section">
@@ -67,38 +78,20 @@
                 <label class="required" for="region">활동 지역</label>
                 <select id="region" name="region" required>
                   <option value="">선택하세요</option>
-                  <option value="seoul">서울</option>
-                  <option value="gyeonggi">경기</option>
-                  <option value="incheon">인천</option>
-                  <option value="busan">부산</option>
-                  <option value="daegu">대구</option>
-                  <option value="gwangju">광주</option>
-                  <option value="daejeon">대전</option>
-                  <option value="ulsan">울산</option>
-                  <option value="sejong">세종</option>
-                  <option value="gangwon">강원</option>
-                  <option value="chungbuk">충북</option>
-                  <option value="chungnam">충남</option>
-                  <option value="jeonbuk">전북</option>
-                  <option value="jeonnam">전남</option>
-                  <option value="gyeongbuk">경북</option>
-                  <option value="gyeongnam">경남</option>
-                  <option value="jeju">제주</option>
+                  {% for val, label in [('seoul','서울'),('gyeonggi','경기'),('incheon','인천'),('busan','부산'),('daegu','대구'),('gwangju','광주'),('daejeon','대전'),('ulsan','울산'),('sejong','세종'),('gangwon','강원'),('chungbuk','충북'),('chungnam','충남'),('jeonbuk','전북'),('jeonnam','전남'),('gyeongbuk','경북'),('gyeongnam','경남'),('jeju','제주')] %}
+                  <option value="{{ val }}" {% if form.region == val %}selected{% endif %}>{{ label }}</option>
+                  {% endfor %}
                 </select>
               </div>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label class="required" for="email">이메일</label>
-                <input type="email" id="email" name="email" placeholder="example@email.com"
-                       required value="{{ form.email or '' }}">
-              </div>
-              <div class="form-group">
-                <label class="required" for="phone">연락처</label>
-                <input type="tel" id="phone" name="phone" placeholder="010-0000-0000"
-                       required value="{{ form.phone or '' }}">
-              </div>
+            <div class="form-group">
+              <label class="required" for="phone">연락처</label>
+              <input type="tel" id="phone" name="phone" placeholder="010-0000-0000"
+                     required value="{{ form.phone or '' }}">
+              <small style="color: var(--text-light); font-size: 12px; margin-top: 4px; display: block;">
+                연락처는 예약이 확정된 기업에게만 공개됩니다
+              </small>
             </div>
           </div>
 
@@ -148,13 +141,34 @@
           </div>
 
           <button type="submit" class="btn btn-green btn-full" style="font-size: 16px; padding: 14px;">
-            등록하기
+            가입하고 프로필 등록하기
           </button>
         </form>
+
+        <div style="text-align: center; margin-top: 20px; font-size: 14px; color: var(--text-sub);">
+          이미 계정이 있으신가요? <a href="/login" style="color: var(--accent-dark); font-weight: 600;">로그인</a>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<script>
+  document.querySelector('form').addEventListener('submit', function(e) {
+    const days = document.querySelectorAll('input[name="available_days"]:checked');
+    if (days.length === 0) {
+      e.preventDefault();
+      alert('가능 요일을 하나 이상 선택해주세요.');
+      return;
+    }
+    const pw = document.getElementById('password').value;
+    const pw2 = document.getElementById('password_confirm').value;
+    if (pw !== pw2) {
+      e.preventDefault();
+      alert('비밀번호가 서로 일치하지 않습니다.');
+    }
+  });
+</script>
 
 </body>
 </html>

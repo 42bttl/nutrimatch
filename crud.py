@@ -4,7 +4,36 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from models import Booking, CompanyRequest, MatchResult, Nutritionist
+from models import Booking, CompanyRequest, MatchResult, Nutritionist, User
+
+
+# ─── 사용자 CRUD ──────────────────────────────────────────────────────────────
+
+def create_user(
+    db: Session,
+    email: str,
+    password_hash: str,
+    role: str,
+    name: str,
+    phone: Optional[str] = None,
+    company_name: Optional[str] = None,
+) -> User:
+    u = User(
+        email=email.strip().lower(),
+        password_hash=password_hash,
+        role=role,
+        name=name,
+        phone=phone,
+        company_name=company_name,
+    )
+    db.add(u)
+    db.commit()
+    db.refresh(u)
+    return u
+
+
+def get_user_by_email(db: Session, email: str) -> Optional[User]:
+    return db.query(User).filter(User.email == email.strip().lower()).first()
 
 
 # ─── 영양사 CRUD ──────────────────────────────────────────────────────────────
@@ -22,6 +51,7 @@ def create_nutritionist(
     email: str,
     phone: str,
     bio: Optional[str] = None,
+    user_id: Optional[int] = None,
 ) -> Nutritionist:
     n = Nutritionist(
         name=name,
@@ -35,6 +65,7 @@ def create_nutritionist(
         email=email,
         phone=phone,
         bio=bio,
+        user_id=user_id,
     )
     db.add(n)
     db.commit()
@@ -64,6 +95,37 @@ def get_nutritionist_by_email(db: Session, email: str) -> Optional[Nutritionist]
     return db.query(Nutritionist).filter(Nutritionist.email == email).first()
 
 
+def get_nutritionist_by_user(db: Session, user_id: int) -> Optional[Nutritionist]:
+    return db.query(Nutritionist).filter(Nutritionist.user_id == user_id).first()
+
+
+def update_nutritionist_profile(
+    db: Session,
+    nutritionist: Nutritionist,
+    specialty: str,
+    region: str,
+    available_days: List[str],
+    available_time_start: time,
+    available_time_end: time,
+    hourly_rate: int,
+    phone: str,
+    bio: Optional[str],
+    is_active: bool,
+) -> Nutritionist:
+    nutritionist.specialty = specialty
+    nutritionist.region = region
+    nutritionist.available_days = json.dumps(available_days)
+    nutritionist.available_time_start = available_time_start
+    nutritionist.available_time_end = available_time_end
+    nutritionist.hourly_rate = hourly_rate
+    nutritionist.phone = phone
+    nutritionist.bio = bio
+    nutritionist.is_active = is_active
+    db.commit()
+    db.refresh(nutritionist)
+    return nutritionist
+
+
 def count_nutritionists(db: Session) -> int:
     return db.query(Nutritionist).filter(Nutritionist.is_active == True).count()
 
@@ -85,6 +147,7 @@ def create_company_request(
     preferred_time_start: time,
     preferred_time_end: time,
     notes: Optional[str] = None,
+    user_id: Optional[int] = None,
 ) -> CompanyRequest:
     r = CompanyRequest(
         company_name=company_name,
@@ -100,6 +163,7 @@ def create_company_request(
         preferred_time_start=preferred_time_start,
         preferred_time_end=preferred_time_end,
         notes=notes,
+        user_id=user_id,
     )
     db.add(r)
     db.commit()
@@ -113,6 +177,15 @@ def get_company_request(db: Session, request_id: int) -> Optional[CompanyRequest
 
 def get_company_requests(db: Session, skip: int = 0, limit: int = 100) -> List[CompanyRequest]:
     return db.query(CompanyRequest).order_by(CompanyRequest.created_at.desc()).offset(skip).limit(limit).all()
+
+
+def get_company_requests_by_user(db: Session, user_id: int) -> List[CompanyRequest]:
+    return (
+        db.query(CompanyRequest)
+        .filter(CompanyRequest.user_id == user_id)
+        .order_by(CompanyRequest.created_at.desc())
+        .all()
+    )
 
 
 def count_company_requests(db: Session) -> int:
@@ -253,6 +326,25 @@ def create_booking(db: Session, match_result_id: int) -> Optional[Booking]:
 
 def get_bookings(db: Session) -> List[Booking]:
     return db.query(Booking).order_by(Booking.created_at.desc()).all()
+
+
+def get_bookings_for_company_user(db: Session, user_id: int) -> List[Booking]:
+    return (
+        db.query(Booking)
+        .join(CompanyRequest, Booking.request_id == CompanyRequest.id)
+        .filter(CompanyRequest.user_id == user_id)
+        .order_by(Booking.created_at.desc())
+        .all()
+    )
+
+
+def get_bookings_for_nutritionist(db: Session, nutritionist_id: int) -> List[Booking]:
+    return (
+        db.query(Booking)
+        .filter(Booking.nutritionist_id == nutritionist_id)
+        .order_by(Booking.created_at.desc())
+        .all()
+    )
 
 
 def get_booking(db: Session, booking_id: int) -> Optional[Booking]:
