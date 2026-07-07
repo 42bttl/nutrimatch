@@ -13,15 +13,29 @@
 <div class="page-header">
   <div class="page-header-inner">
     <h1>👩‍⚕️ 내 프로필</h1>
-    <p>{{ profile.name }} 님 ({{ profile.specialty_label }} · {{ profile.region_label }})</p>
+    <p>{{ profile.name }} 님 ({{ profile.specialty_label }} · {{ profile.region_label }})
+      <span class="badge {% if profile.verification_status == 'verified' %}status-confirmed{% elif profile.verification_status == 'pending' %}status-pending{% else %}status-cancelled{% endif %}">
+        {{ profile.verification_label }}
+      </span>
+    </p>
   </div>
 </div>
 
 {% if request.query_params.get('welcome') %}
-<div class="success-banner">🎉 가입을 환영합니다! 프로필이 등록되어 기업 매칭에 참여 중입니다.</div>
+<div class="success-banner">🎉 가입을 환영합니다! 면허 확인(승인)이 완료되면 영양사 목록과 기업 매칭에 노출됩니다.</div>
 {% endif %}
 {% if request.query_params.get('saved') %}
 <div class="success-banner">✅ 프로필이 저장되었습니다.</div>
+{% endif %}
+
+{% if profile.verification_status == 'pending' %}
+<div class="alert alert-success" style="max-width: 900px; margin: 16px auto; background: #FFF8E1; border-color: #FFE082; color: #795548;">
+  ⏳ <strong>면허 승인 대기 중입니다.</strong> 관리자가 면허번호를 확인하면 영양사 목록과 매칭에 노출됩니다.
+</div>
+{% elif profile.verification_status == 'rejected' %}
+<div class="alert alert-error" style="max-width: 900px; margin: 16px auto;">
+  ⚠️ <strong>면허 확인이 반려되었습니다.</strong> 아래에서 면허번호를 다시 확인해 제출해주세요.
+</div>
 {% endif %}
 
 <div class="page-body">
@@ -48,8 +62,14 @@
                 <input type="text" value="{{ profile.name }}" disabled>
               </div>
               <div class="form-group">
-                <label>면허 번호</label>
+                {% if profile.verification_status == 'verified' %}
+                <label>면허 번호 (인증 완료)</label>
                 <input type="text" value="{{ profile.license_number }}" disabled>
+                {% else %}
+                <label class="required" for="license_number">면허 번호 (수정 시 재승인 필요)</label>
+                <input type="text" id="license_number" name="license_number" required
+                       value="{{ profile.license_number }}">
+                {% endif %}
               </div>
             </div>
             <div class="form-row">

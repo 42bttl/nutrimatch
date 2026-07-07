@@ -36,6 +36,21 @@ def get_user_by_email(db: Session, email: str) -> Optional[User]:
     return db.query(User).filter(User.email == email.strip().lower()).first()
 
 
+def get_user(db: Session, user_id: int) -> Optional[User]:
+    return db.query(User).filter(User.id == user_id).first()
+
+
+def get_users(db: Session) -> List[User]:
+    return db.query(User).order_by(User.created_at.desc()).all()
+
+
+def update_password(db: Session, user: User, password_hash: str) -> User:
+    user.password_hash = password_hash
+    db.commit()
+    db.refresh(user)
+    return user
+
+
 # ─── 영양사 CRUD ──────────────────────────────────────────────────────────────
 
 def create_nutritionist(
@@ -52,6 +67,7 @@ def create_nutritionist(
     phone: str,
     bio: Optional[str] = None,
     user_id: Optional[int] = None,
+    verification_status: str = "pending",
 ) -> Nutritionist:
     n = Nutritionist(
         name=name,
@@ -66,6 +82,7 @@ def create_nutritionist(
         phone=phone,
         bio=bio,
         user_id=user_id,
+        verification_status=verification_status,
     )
     db.add(n)
     db.commit()
@@ -78,13 +95,51 @@ def get_nutritionist(db: Session, nutritionist_id: int) -> Optional[Nutritionist
 
 
 def get_nutritionists(db: Session, skip: int = 0, limit: int = 100) -> List[Nutritionist]:
+    """공개 목록: 활성 + 면허 인증 완료 영양사만."""
     return (
         db.query(Nutritionist)
-        .filter(Nutritionist.is_active == True)
+        .filter(
+            Nutritionist.is_active == True,
+            Nutritionist.verification_status == "verified",
+        )
         .offset(skip)
         .limit(limit)
         .all()
     )
+
+
+def get_all_nutritionists(db: Session) -> List[Nutritionist]:
+    """관리자용: 상태 무관 전체 영양사."""
+    return db.query(Nutritionist).order_by(Nutritionist.created_at.desc()).all()
+
+
+def get_pending_nutritionists(db: Session) -> List[Nutritionist]:
+    return (
+        db.query(Nutritionist)
+        .filter(Nutritionist.verification_status == "pending")
+        .order_by(Nutritionist.created_at.asc())
+        .all()
+    )
+
+
+def set_verification_status(
+    db: Session, nutritionist: Nutritionist, status: str
+) -> Nutritionist:
+    nutritionist.verification_status = status
+    db.commit()
+    db.refresh(nutritionist)
+    return nutritionist
+
+
+def update_license_number(
+    db: Session, nutritionist: Nutritionist, license_number: str
+) -> Nutritionist:
+    """면허번호 수정 시 재승인 필요 → pending으로 초기화."""
+    nutritionist.license_number = license_number
+    nutritionist.verification_status = "pending"
+    db.commit()
+    db.refresh(nutritionist)
+    return nutritionist
 
 
 def get_nutritionist_by_license(db: Session, license_number: str) -> Optional[Nutritionist]:
@@ -127,7 +182,14 @@ def update_nutritionist_profile(
 
 
 def count_nutritionists(db: Session) -> int:
-    return db.query(Nutritionist).filter(Nutritionist.is_active == True).count()
+    return (
+        db.query(Nutritionist)
+        .filter(
+            Nutritionist.is_active == True,
+            Nutritionist.verification_status == "verified",
+        )
+        .count()
+    )
 
 
 # ─── 기업 수요 CRUD ───────────────────────────────────────────────────────────
@@ -244,7 +306,14 @@ def run_matching(request_id: int, db: Session) -> List[MatchResult]:
     db.query(MatchResult).filter(MatchResult.request_id == request_id).delete()
     db.flush()
 
-    nutritionists = db.query(Nutritionist).filter(Nutritionist.is_active == True).all()
+    nutritionists = (
+        db.query(Nutritionist)
+        .filter(
+            Nutritionist.is_active == True,
+            Nutritionist.verification_status == "verified",
+        )
+        .all()
+    )
 
     scored = []
     for n in nutritionists:
@@ -479,6 +548,6 @@ def seed_nutritionists(db: Session) -> int:
         existing = get_nutritionist_by_license(db, data["license_number"])
         if existing:
             continue
-        create_nutritionist(db, **data)
+        create_nutritionist(db, **data, verification_status="verified")
         inserted += 1
     return inserted

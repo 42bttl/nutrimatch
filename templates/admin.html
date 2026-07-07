@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 — NutriMatch</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+{% include "partials/_nav.html" %}
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <h1>🛠️ 관리자 대시보드</h1>
+    <p>면허 승인, 회원 관리, 예약 현황을 한눈에 관리합니다</p>
+  </div>
+</div>
+
+<div class="booking-container">
+
+  {% if request.query_params.get('msg') %}
+  <div class="alert alert-success">✅ {{ request.query_params.get('msg') }}</div>
+  {% endif %}
+
+  {% if reset_link %}
+  <div class="alert alert-success" style="word-break: break-all;">
+    🔑 <strong>{{ reset_target }}</strong> 비밀번호 재설정 링크 (1시간 유효){% if reset_emailed %} — 이메일 발송 완료{% else %} — 이메일 미발송(SMTP 미설정), 아래 링크를 직접 전달하세요{% endif %}<br>
+    <code style="font-size: 12px;">{{ reset_link }}</code>
+  </div>
+  {% endif %}
+
+  <!-- 통계 -->
+  <div class="stats-bar" style="margin-bottom: 28px;">
+    <div class="stats-inner">
+      <div class="stat-item">
+        <div class="stat-number">{{ stats.nutritionist_users }}</div>
+        <div class="stat-label">영양사 회원</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ stats.company_users }}</div>
+        <div class="stat-label">기업 회원</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ stats.verified }}</div>
+        <div class="stat-label">인증 영양사</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ stats.requests }}</div>
+        <div class="stat-label">누적 신청</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">{{ stats.bookings }}</div>
+        <div class="stat-label">누적 예약</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 면허 승인 대기 -->
+  <div class="form-card" style="margin-bottom: 28px;">
+    <div class="form-card-header">
+      <h1 style="font-size: 1.15rem;">📋 면허 승인 대기 ({{ pending_nutritionists|length }}건)</h1>
+      <p>면허번호를 확인한 뒤 승인하면 영양사 목록과 매칭에 노출됩니다</p>
+    </div>
+    <div class="form-card-body">
+      {% if pending_nutritionists %}
+      <div class="booking-table-wrap">
+        <table class="booking-table">
+          <thead>
+            <tr>
+              <th>이름</th><th>면허번호</th><th>전문분야</th><th>지역</th><th>이메일</th><th>연락처</th><th>가입일</th><th>처리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for n in pending_nutritionists %}
+            <tr>
+              <td style="font-weight: 600;">{{ n.name }}</td>
+              <td><code>{{ n.license_number }}</code></td>
+              <td><span class="badge badge-green">{{ n.specialty_label }}</span></td>
+              <td><span class="badge badge-blue">{{ n.region_label }}</span></td>
+              <td style="font-size: 13px;">{{ n.email }}</td>
+              <td style="font-size: 13px;">{{ n.phone }}</td>
+              <td style="font-size: 13px; color: var(--text-sub);">{{ n.created_at.strftime('%Y.%m.%d') }}</td>
+              <td>
+                <div class="booking-actions">
+                  <form method="POST" action="/admin/nutritionists/{{ n.id }}/verify" style="margin:0;">
+                    <button type="submit" class="btn btn-green btn-sm">승인</button>
+                  </form>
+                  <form method="POST" action="/admin/nutritionists/{{ n.id }}/reject" style="margin:0;">
+                    <button type="submit" class="btn btn-sm"
+                            style="background:#FFEBEE; color:#C62828; border:1px solid #EF9A9A;"
+                            onclick="return confirm('이 면허 등록을 반려하시겠습니까?')">반려</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p style="font-size: 12px; color: var(--text-light); margin-top: 10px;">
+        💡 면허 진위는 보건복지부 면허민원 안내(1577-1000) 또는 대한영양사협회(02-823-5680)로 확인할 수 있습니다.
+      </p>
+      {% else %}
+      <p style="font-size: 14px; color: var(--text-sub);">승인 대기 중인 영양사가 없습니다.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 전체 영양사 -->
+  <div class="form-card" style="margin-bottom: 28px;">
+    <div class="form-card-header">
+      <h1 style="font-size: 1.15rem;">👩‍⚕️ 전체 영양사 ({{ all_nutritionists|length }}명)</h1>
+    </div>
+    <div class="form-card-body">
+      {% if all_nutritionists %}
+      <div class="booking-table-wrap">
+        <table class="booking-table">
+          <thead>
+            <tr><th>이름</th><th>면허번호</th><th>전문분야</th><th>지역</th><th>요금</th><th>활성</th><th>인증 상태</th><th>처리</th></tr>
+          </thead>
+          <tbody>
+            {% for n in all_nutritionists %}
+            <tr>
+              <td style="font-weight: 600;">{{ n.name }}</td>
+              <td><code>{{ n.license_number }}</code></td>
+              <td><span class="badge badge-green">{{ n.specialty_label }}</span></td>
+              <td><span class="badge badge-blue">{{ n.region_label }}</span></td>
+              <td>{{ n.hourly_rate | krw }}</td>
+              <td>{{ '✅' if n.is_active else '⏸️' }}</td>
+              <td>
+                <span class="badge {% if n.verification_status == 'verified' %}status-confirmed{% elif n.verification_status == 'pending' %}status-pending{% else %}status-cancelled{% endif %}">
+                  {{ n.verification_label }}
+                </span>
+              </td>
+              <td>
+                {% if n.verification_status == 'verified' %}
+                <form method="POST" action="/admin/nutritionists/{{ n.id }}/reject" style="margin:0;">
+                  <button type="submit" class="btn btn-sm btn-outline"
+                          onclick="return confirm('인증을 취소(반려)하시겠습니까? 목록·매칭에서 제외됩니다.')">인증 취소</button>
+                </form>
+                {% elif n.verification_status == 'rejected' %}
+                <form method="POST" action="/admin/nutritionists/{{ n.id }}/verify" style="margin:0;">
+                  <button type="submit" class="btn btn-sm btn-green">승인</button>
+                </form>
+                {% else %}
+                <span style="color: var(--text-light); font-size: 13px;">위 대기열에서 처리</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p style="font-size: 14px; color: var(--text-sub);">등록된 영양사가 없습니다.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 회원 관리 -->
+  <div class="form-card" style="margin-bottom: 28px;">
+    <div class="form-card-header">
+      <h1 style="font-size: 1.15rem;">👥 회원 관리 ({{ users|length }}명)</h1>
+      <p>비밀번호 분실 회원에게 재설정 링크를 발급할 수 있습니다</p>
+    </div>
+    <div class="form-card-body">
+      <div class="booking-table-wrap">
+        <table class="booking-table">
+          <thead>
+            <tr><th>이메일</th><th>이름</th><th>역할</th><th>소속</th><th>가입일</th><th>처리</th></tr>
+          </thead>
+          <tbody>
+            {% for u in users %}
+            <tr>
+              <td style="font-size: 13px;">{{ u.email }}</td>
+              <td style="font-weight: 600;">{{ u.name }}</td>
+              <td>
+                <span class="badge {% if u.role == 'admin' %}badge-purple{% elif u.role == 'nutritionist' %}badge-green{% else %}badge-blue{% endif %}">
+                  {{ u.role_label }}
+                </span>
+              </td>
+              <td style="font-size: 13px;">{{ u.company_name or '—' }}</td>
+              <td style="font-size: 13px; color: var(--text-sub);">{{ u.created_at.strftime('%Y.%m.%d') }}</td>
+              <td>
+                {% if u.role != 'admin' %}
+                <form method="POST" action="/admin/users/{{ u.id }}/reset-link" style="margin:0;">
+                  <button type="submit" class="btn btn-sm btn-outline">🔑 재설정 링크</button>
+                </form>
+                {% else %}
+                <span style="color: var(--text-light); font-size: 13px;">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 최근 예약 -->
+  <div class="form-card">
+    <div class="form-card-header">
+      <h1 style="font-size: 1.15rem;">📅 최근 예약 (최대 10건)</h1>
+      <p>전체 예약은 <a href="/bookings" style="color: var(--accent-dark);">예약 현황</a>에서 관리할 수 있습니다</p>
+    </div>
+    <div class="form-card-body">
+      {% if recent_bookings %}
+      <div class="booking-table-wrap">
+        <table class="booking-table">
+          <thead>
+            <tr><th>#</th><th>기업명</th><th>영양사</th><th>신청일</th><th>상태</th></tr>
+          </thead>
+          <tbody>
+            {% for b in recent_bookings %}
+            <tr>
+              <td style="color: var(--text-light);">{{ b.id }}</td>
+              <td style="font-weight: 600;">{{ b.request.company_name }}</td>
+              <td>{{ b.nutritionist.name }}</td>
+              <td style="font-size: 13px; color: var(--text-sub);">{{ b.created_at.strftime('%Y.%m.%d') }}</td>
+              <td><span class="badge status-{{ b.status }}">{{ b.status_label }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p style="font-size: 14px; color: var(--text-sub);">예약 내역이 없습니다.</p>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

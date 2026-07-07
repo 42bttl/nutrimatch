@@ -86,6 +86,13 @@ ALL_DAYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 ROLE_LABELS = {
     "nutritionist": "영양사",
     "company": "기업",
+    "admin": "관리자",
+}
+
+VERIFICATION_LABELS = {
+    "pending": "승인 대기",
+    "verified": "인증 완료",
+    "rejected": "반려",
 }
 
 
@@ -127,6 +134,10 @@ class Nutritionist(Base):
     email = Column(String(100), unique=True, nullable=False)
     phone = Column(String(20), nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
+    # 면허 검증 상태: pending(승인 대기) / verified(인증 완료) / rejected(반려)
+    verification_status = Column(
+        String(20), nullable=False, default="pending", server_default="pending"
+    )
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # 레거시 데이터는 NULL
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
@@ -145,6 +156,10 @@ class Nutritionist(Base):
     @property
     def region_label(self):
         return REGION_LABELS.get(self.region, self.region)
+
+    @property
+    def verification_label(self):
+        return VERIFICATION_LABELS.get(self.verification_status, self.verification_status)
 
 
 class CompanyRequest(Base):

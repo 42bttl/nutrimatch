@@ -11,6 +11,20 @@ services:
           property: connectionString
       - key: SECRET_KEY
         generateValue: true
+      # 관리자 계정 (Render 대시보드에서 값 입력)
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # 비밀번호 재설정 메일 발송용 SMTP (선택 — 미설정 시 관리자가 링크 직접 발급)
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
 
 databases:
   - name: nutrimatch-db
